@@ -1,0 +1,51 @@
+---
+// Animation pédagogique d'un vérin double effet : la tige avance et recule en
+// boucle, avec les annotations standards (alésage D, tige d, course, surfaces
+// S1/S2). Schéma de principe à but pédagogique — pas un plan technique normé.
+---
+<figure class="animation-verin no-print">
+  <svg viewBox="0 0 420 180" role="img" aria-label="Animation d'un vérin double effet en mouvement">
+    <!-- Corps du vérin (fixe) -->
+    <rect x="40" y="60" width="140" height="60" rx="4" fill="var(--color-gris-clair)" stroke="var(--color-anthracite)" stroke-width="2" />
+
+    <!-- Cote alésage D -->
+    <line x1="40" y1="50" x2="180" y2="50" stroke="var(--color-anthracite)" stroke-width="1" />
+    <line x1="40" y1="44" x2="40" y2="56" stroke="var(--color-anthracite)" stroke-width="1" />
+    <line x1="180" y1="44" x2="180" y2="56" stroke="var(--color-anthracite)" stroke-width="1" />
+    <text x="110" y="40" text-anchor="middle" class="anim-label">D (alésage)</text>
+
+    <!-- Orifices P (fond) et T (tige), alternent en surbrillance -->
+    <g class="anim-port anim-port-fond">
+      <rect x="44" y="86" width="10" height="8" fill="var(--color-bleu-hydraulique)" />
+      <text x="49" y="105" text-anchor="middle" class="anim-label anim-label-petit">P</text>
+    </g>
+
+    <!-- Groupe mobile : piston + tige -->
+    <g class="anim-mobile">
+      <rect x="155" y="62" width="10" height="56" fill="var(--color-anthracite)" />
+      <rect x="165" y="84" width="160" height="12" fill="var(--color-ambre)" />
+      <rect x="320" y="76" width="14" height="28" rx="2" fill="var(--color-gris-bordure)" stroke="var(--color-anthracite)" stroke-width="1.5" />
+      <text x="245" y="78" text-anchor="middle" class="anim-label anim-label-petit">d (tige)</text>
+    </g>
+
+    <g class="anim-port anim-port-tige">
+      <rect x="330" y="86" width="10" height="8" fill="var(--color-bleu-hydraulique)" />
+      <text x="335" y="105" text-anchor="middle" class="anim-label anim-label-petit">T</text>
+    </g>
+
+    <!-- Cote course -->
+    <line x1="180" y1="135" x2="340" y2="135" stroke="var(--color-ambre)" stroke-width="1.5" marker-start="url(#fleche)" marker-end="url(#fleche)" />
+    <text x="260" y="150" text-anchor="middle" class="anim-label">Course</text>
+
+    <!-- Surfaces S1 / S2 -->
+    <text x="60" y="95" text-anchor="middle" class="anim-label anim-label-petit anim-label-blanc">S₁</text>
+    <text x="170" y="95" text-anchor="middle" class="anim-label anim-label-petit anim-label-blanc">S₂</text>
+
+    <defs>
+      <marker id="fleche" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6" fill="none" stroke="var(--color-ambre)" stroke-width="1.2" />
+      </marker>
+    </defs>
+  </svg>
+  <figcaption>Vérin double effet en mouvement — D = diamètre d'alésage, d = diamètre de tige, S₁/S₂ = surfaces fond/tige.</figcaption>
+</figure>

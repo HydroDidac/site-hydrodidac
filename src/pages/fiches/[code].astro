@@ -1,6 +1,7 @@
 ---
 import Layout from "../../components/Layout.astro";
 import IllustrationBanniere from "../../components/IllustrationBanniere.astro";
+import AnimationVerin from "../../components/AnimationVerin.astro";
 import { render } from "astro:content";
 import { getGroupesFiches } from "../../lib/fiches";
 import { getImagesForFiche } from "../../lib/images";
@@ -71,6 +72,8 @@ const structuredData = {
     <div class="fiche-impression-action no-print">
       <button class="bouton-imprimer" onclick="window.print()">🖨️ Version imprimable</button>
     </div>
+
+    {groupe.module === "Vérins hydrauliques" && <AnimationVerin />}
 
     {images.cover && (
       <figure class="figure-cover">

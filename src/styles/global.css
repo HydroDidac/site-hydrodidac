@@ -147,6 +147,50 @@ code, pre, .valeur {
   background: white;
 }
 
+/* Animation pédagogique du vérin */
+.animation-verin {
+  margin: var(--espace-3) 0;
+  text-align: center;
+}
+.animation-verin svg {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+}
+.anim-label {
+  font-family: var(--font-valeurs);
+  font-size: 11px;
+  fill: var(--color-anthracite);
+}
+.anim-label-petit {
+  font-size: 9px;
+}
+.anim-label-blanc {
+  fill: white;
+  font-weight: 600;
+}
+.anim-mobile {
+  animation: verinVaEtVient 3.2s ease-in-out infinite;
+}
+@keyframes verinVaEtVient {
+  0%, 12% { transform: translateX(0); }
+  50%, 62% { transform: translateX(70px); }
+  100% { transform: translateX(0); }
+}
+.anim-port {
+  animation: portClignote 3.2s ease-in-out infinite;
+}
+.anim-port-fond { animation-delay: 0s; }
+.anim-port-tige { animation-delay: 1.6s; }
+@keyframes portClignote {
+  0%, 12% { opacity: 1; }
+  18%, 92% { opacity: 0.25; }
+  100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-mobile, .anim-port { animation: none; }
+}
+
 /* Bandeau de fiche (avec illustration et dégradé de marque) */
 .fiche-banniere {
   display: flex;
