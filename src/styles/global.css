@@ -131,6 +131,21 @@ code, pre, .valeur {
   padding: var(--espace-2) var(--espace-3);
   margin: var(--espace-3) 0;
 }
+.encadre-formules :first-child,
+.encadre-securite :first-child {
+  margin-top: 0;
+}
+.encadre-formules h2,
+.encadre-formules h3,
+.encadre-securite h2,
+.encadre-securite h3 {
+  font-size: 1rem;
+  margin-bottom: var(--espace-1);
+}
+.encadre-formules table,
+.encadre-formules code {
+  background: white;
+}
 
 /* Bandeau de fiche (avec illustration et dégradé de marque) */
 .fiche-banniere {

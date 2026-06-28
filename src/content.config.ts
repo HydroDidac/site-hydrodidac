@@ -12,8 +12,6 @@ const fiches = defineCollection({
     tempsLecture: z.number().optional(), // minutes
     ficheLiees: z.array(z.string()).default([]), // codes des fiches liées
     datePublication: z.coerce.date(),
-    formulesClefs: z.array(z.string()).default([]), // affichées dans l'encadré bleu "Formules clés"
-    securite: z.string().optional(), // affiché dans l'encadré rouge sécurité
   }),
 });
 

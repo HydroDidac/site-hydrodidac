@@ -87,22 +87,9 @@ const structuredData = {
 
     {panneaux.map(({ version, Content }, i) => (
       <section class="niveau-panneau" data-niveau-panneau={version.data.niveau} style={i === 0 ? "" : "display:none"}>
-        {version.data.formulesClefs.length > 0 && (
-          <div class="encadre-formules">
-            <strong>Formules clés</strong>
-            <ul>
-              {version.data.formulesClefs.map((f) => <li><code>{f}</code></li>)}
-            </ul>
-          </div>
-        )}
-
         <div class="fiche-contenu">
           <Content />
         </div>
-
-        {version.data.securite && (
-          <div class="encadre-securite">⚠️ {version.data.securite}</div>
-        )}
       </section>
     ))}
 
