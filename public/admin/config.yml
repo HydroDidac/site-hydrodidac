@@ -1,8 +1,8 @@
 backend:
   name: github
-  repo: ton-compte-github/site-hydrodidac # ⚠️ à remplacer par ton vrai dépôt GitHub
+  repo: HydroDidac/site-hydrodidac
   branch: main
-  base_url: https://hydrodidac-cms-auth.<ton-sous-domaine>.workers.dev # ⚠️ URL du Worker d'authentification (voir README de déploiement)
+  base_url: https://hydrodidac-cms-auth.damienlhydraulicien.workers.dev
 
 site_url: https://hydrodidac.com
 
