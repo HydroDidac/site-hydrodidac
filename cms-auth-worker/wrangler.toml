@@ -2,6 +2,13 @@ name = "hydrodidac-cms-auth"
 main = "index.js"
 compatibility_date = "2025-01-01"
 
-# Les secrets (GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET) ne se mettent pas ici :
-# ils se configurent avec `wrangler secret put GITHUB_CLIENT_ID` etc.
-# Voir DEPLOIEMENT.md à la racine du projet pour la procédure complète.
+# Le Client ID n'est pas une donnée secrète (il est visible publiquement dans
+# toute requête d'autorisation OAuth) : on le déclare ici pour qu'il survive
+# aux redéploiements automatiques déclenchés par git push.
+[vars]
+GITHUB_CLIENT_ID = "Ov23li2teO7JuV1WdhEe"
+
+# GITHUB_CLIENT_SECRET reste un vrai secret : il se configure uniquement via
+# le tableau de bord Cloudflare (Settings > Variables and Secrets, type
+# "Secret" + Encrypt) ou `wrangler secret put GITHUB_CLIENT_SECRET`. Les
+# secrets ne sont pas effacés par les redéploiements automatiques.
