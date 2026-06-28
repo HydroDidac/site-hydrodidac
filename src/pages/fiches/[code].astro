@@ -1,0 +1,148 @@
+---
+import Layout from "../../components/Layout.astro";
+import IllustrationBanniere from "../../components/IllustrationBanniere.astro";
+import { render } from "astro:content";
+import { getGroupesFiches } from "../../lib/fiches";
+import { getImagesForFiche } from "../../lib/images";
+
+export async function getStaticPaths() {
+  const groupes = await getGroupesFiches();
+  return groupes.map((groupe) => ({
+    params: { code: groupe.slug },
+    props: { groupe },
+  }));
+}
+
+const { groupe } = Astro.props;
+const images = getImagesForFiche(groupe.code);
+
+const niveauInfo: Record<string, { label: string; classe: string }> = {
+  debutant: { label: "🟢 Débutant", classe: "debutant" },
+  intermediaire: { label: "🟠 Intermédiaire", classe: "intermediaire" },
+  avance: { label: "🔴 Expert", classe: "avance" },
+};
+
+const panneaux = await Promise.all(
+  groupe.versions.map(async (version) => {
+    const { Content } = await render(version);
+    return { version, Content };
+  })
+);
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: groupe.titre,
+  description: groupe.resume,
+  datePublished: groupe.datePublication.toISOString(),
+  image: images.cover ? new URL(images.cover.url, Astro.site).toString() : undefined,
+  about: groupe.module,
+};
+---
+<Layout title={`${groupe.titre} — HydroDidac`} description={groupe.resume} structuredData={structuredData}>
+  <main class="fiche-page">
+    <div class="fiche-banniere no-print">
+      <IllustrationBanniere type="verin" />
+      <div class="fiche-banniere-texte">
+        <span class="fiche-banniere-module">{groupe.code} · {groupe.module}</span>
+        <h1>{groupe.titre}</h1>
+        {groupe.tempsLecture && <span class="fiche-banniere-temps">⏱ {groupe.tempsLecture} min de lecture</span>}
+      </div>
+    </div>
+
+    <p class="fiche-entete-impression print-only">{groupe.code} · {groupe.module}</p>
+    <h1 class="print-only">{groupe.titre}</h1>
+
+    {panneaux.length > 1 && (
+      <div class="niveau-tabs no-print" role="tablist">
+        {panneaux.map(({ version }, i) => (
+          <button
+            class={`niveau-tab ${i === 0 ? "actif" : ""}`}
+            data-niveau-tab={version.data.niveau}
+            role="tab"
+            aria-selected={i === 0 ? "true" : "false"}
+          >
+            {niveauInfo[version.data.niveau].label}
+          </button>
+        ))}
+      </div>
+    )}
+
+    <div class="fiche-impression-action no-print">
+      <button class="bouton-imprimer" onclick="window.print()">🖨️ Version imprimable</button>
+    </div>
+
+    {images.cover && (
+      <figure class="figure-cover">
+        <img src={images.cover.url} alt={images.cover.legende} loading="eager" />
+        {images.cover.legende && <figcaption>{images.cover.legende}</figcaption>}
+      </figure>
+    )}
+    {images.schemas.map((schema) => (
+      <figure class="figure-schema">
+        <img src={schema.url} alt={schema.legende} loading="lazy" />
+        {schema.legende && <figcaption>{schema.legende}</figcaption>}
+      </figure>
+    ))}
+
+    {panneaux.map(({ version, Content }, i) => (
+      <section class="niveau-panneau" data-niveau-panneau={version.data.niveau} style={i === 0 ? "" : "display:none"}>
+        {version.data.formulesClefs.length > 0 && (
+          <div class="encadre-formules">
+            <strong>Formules clés</strong>
+            <ul>
+              {version.data.formulesClefs.map((f) => <li><code>{f}</code></li>)}
+            </ul>
+          </div>
+        )}
+
+        <div class="fiche-contenu">
+          <Content />
+        </div>
+
+        {version.data.securite && (
+          <div class="encadre-securite">⚠️ {version.data.securite}</div>
+        )}
+      </section>
+    ))}
+
+    {images.illustrations.length > 0 && (
+      <div class="grille-illustrations">
+        {images.illustrations.map((illu) => (
+          <figure class="figure-illu">
+            <img src={illu.url} alt={illu.legende} loading="lazy" />
+            {illu.legende && <figcaption>{illu.legende}</figcaption>}
+          </figure>
+        ))}
+      </div>
+    )}
+  </main>
+
+  <script>
+    const onglets = document.querySelectorAll<HTMLButtonElement>("[data-niveau-tab]");
+    const panneaux = document.querySelectorAll<HTMLElement>("[data-niveau-panneau]");
+
+    onglets.forEach((onglet) => {
+      onglet.addEventListener("click", () => {
+        const niveau = onglet.dataset.niveauTab;
+
+        onglets.forEach((o) => {
+          o.classList.toggle("actif", o === onglet);
+          o.setAttribute("aria-selected", o === onglet ? "true" : "false");
+        });
+
+        panneaux.forEach((panneau) => {
+          const actif = panneau.dataset.niveauPanneau === niveau;
+          if (actif) {
+            panneau.style.display = "";
+            panneau.classList.remove("niveau-panneau-anim");
+            // relance l'animation d'entrée
+            requestAnimationFrame(() => panneau.classList.add("niveau-panneau-anim"));
+          } else {
+            panneau.style.display = "none";
+          }
+        });
+      });
+    });
+  </script>
+</Layout>

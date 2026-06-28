@@ -1,12 +1,11 @@
 ---
-import { getCollection } from "astro:content";
+import { getGroupesFiches } from "../lib/fiches";
 import { MODULES } from "../lib/modules";
 
-const fiches = await getCollection("fiches");
+const groupes = await getGroupesFiches();
 const compteParModule = new Map<string, number>();
-for (const fiche of fiches) {
-  const cle = fiche.data.module;
-  compteParModule.set(cle, (compteParModule.get(cle) ?? 0) + 1);
+for (const groupe of groupes) {
+  compteParModule.set(groupe.module, (compteParModule.get(groupe.module) ?? 0) + 1);
 }
 ---
 <nav class="sommaire no-print" aria-label="Sommaire des fiches techniques">

@@ -1,12 +1,12 @@
 ---
 import Layout from "../components/Layout.astro";
 import Sommaire from "../components/Sommaire.astro";
-import { getCollection } from "astro:content";
+import { getGroupesFiches } from "../lib/fiches";
 
-const niveauLabel = { debutant: "🟢 Débutant", intermediaire: "🟠 Intermédiaire", avance: "🔴 Avancé" };
+const niveauLabel: Record<string, string> = { debutant: "🟢", intermediaire: "🟠", avance: "🔴" };
 
-const fichesRecentes = (await getCollection("fiches"))
-  .sort((a, b) => b.data.datePublication.valueOf() - a.data.datePublication.valueOf())
+const groupesRecents = (await getGroupesFiches())
+  .sort((a, b) => b.datePublication.valueOf() - a.datePublication.valueOf())
   .slice(0, 3);
 ---
 <Layout title="HydroDidac — Hydraulique industrielle expliquée simplement">
@@ -40,21 +40,23 @@ const fichesRecentes = (await getCollection("fiches"))
             <p>Pour les techniciens qui veulent approfondir sans se perdre.</p>
           </div>
           <div class="carte-fiche">
-            <span class="pastille-niveau avance">🔴 Avancé</span>
-            <h3>Niveau avancé</h3>
-            <p>Formules, normes ISO, cas concrets pour les experts.</p>
+            <span class="pastille-niveau avance">🔴 Expert</span>
+            <h3>Niveau expert</h3>
+            <p>Formules, normes ISO, cas concrets pour les spécialistes.</p>
           </div>
         </div>
       </section>
 
-      {fichesRecentes.length > 0 && (
+      {groupesRecents.length > 0 && (
         <section style="margin-top: 2.5rem;">
           <h2>Dernières fiches publiées</h2>
-          {fichesRecentes.map((fiche) => (
-            <a class="carte-fiche" href={`/fiches/${fiche.id}`}>
-              <span class={`pastille-niveau ${fiche.data.niveau}`}>{niveauLabel[fiche.data.niveau]}</span>
-              <h3>{fiche.data.titre}</h3>
-              <p>{fiche.data.resume}</p>
+          {groupesRecents.map((groupe) => (
+            <a class="carte-fiche" href={`/fiches/${groupe.slug}`}>
+              <span class="pastille-niveau debutant">
+                {groupe.versions.map((v) => niveauLabel[v.data.niveau]).join(" ")}
+              </span>
+              <h3>{groupe.titre}</h3>
+              <p>{groupe.resume}</p>
             </a>
           ))}
         </section>

@@ -1,0 +1,27 @@
+---
+interface Props {
+  type?: "verin" | "pompe" | "generique";
+}
+const { type = "generique" } = Astro.props;
+---
+{type === "verin" && (
+  <svg viewBox="0 0 160 80" class="illustration-banniere" aria-hidden="true">
+    <rect x="10" y="28" width="70" height="24" rx="4" fill="currentColor" opacity="0.85" />
+    <rect x="74" y="36" width="8" height="8" fill="currentColor" opacity="0.6" />
+    <rect x="82" y="38" width="60" height="4" fill="currentColor" opacity="0.85" />
+    <circle cx="142" cy="40" r="6" fill="currentColor" opacity="0.6" />
+  </svg>
+)}
+{type === "pompe" && (
+  <svg viewBox="0 0 160 80" class="illustration-banniere" aria-hidden="true">
+    <circle cx="60" cy="40" r="26" fill="none" stroke="currentColor" stroke-width="6" opacity="0.85" />
+    <path d="M60 18 L75 40 L60 62 L45 40 Z" fill="currentColor" opacity="0.6" />
+    <rect x="86" y="36" width="56" height="8" fill="currentColor" opacity="0.85" />
+  </svg>
+)}
+{type === "generique" && (
+  <svg viewBox="0 0 160 80" class="illustration-banniere" aria-hidden="true">
+    <path d="M30 60 L80 20 L130 60 Z" fill="currentColor" opacity="0.7" />
+    <circle cx="80" cy="55" r="6" fill="currentColor" />
+  </svg>
+)}

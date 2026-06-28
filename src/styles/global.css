@@ -132,6 +132,86 @@ code, pre, .valeur {
   margin: var(--espace-3) 0;
 }
 
+/* Bandeau de fiche (avec illustration et dégradé de marque) */
+.fiche-banniere {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-3);
+  background: linear-gradient(120deg, var(--color-bleu-hydraulique), #0a3f73);
+  color: white;
+  border-radius: var(--rayon-carte);
+  padding: var(--espace-3);
+  margin-bottom: var(--espace-3);
+  overflow: hidden;
+}
+.fiche-banniere h1 {
+  color: white;
+  margin: 0.2em 0;
+}
+.fiche-banniere-module {
+  font-family: var(--font-valeurs);
+  font-size: var(--taille-petit);
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.fiche-banniere-temps {
+  font-size: var(--taille-petit);
+  opacity: 0.85;
+}
+.illustration-banniere {
+  width: 96px;
+  height: 56px;
+  flex-shrink: 0;
+  color: var(--color-ambre);
+}
+@media (max-width: 600px) {
+  .illustration-banniere { display: none; }
+}
+
+/* Onglets de niveau (Débutant / Expert) */
+.niveau-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: var(--espace-2);
+}
+.niveau-tab {
+  font-family: var(--font-texte);
+  font-weight: 600;
+  font-size: var(--taille-petit);
+  background: var(--color-gris-clair);
+  border: 1px solid var(--color-gris-bordure);
+  border-radius: 999px;
+  padding: 0.45em 1em;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.niveau-tab:hover {
+  border-color: var(--color-bleu-hydraulique);
+}
+.niveau-tab.actif {
+  background: var(--color-bleu-hydraulique);
+  border-color: var(--color-bleu-hydraulique);
+  color: white;
+}
+
+.fiche-impression-action {
+  text-align: right;
+  margin-bottom: var(--espace-2);
+}
+
+/* Animation d'apparition douce au changement d'onglet */
+.niveau-panneau {
+  animation: ficheApparition 0.25s ease;
+}
+.niveau-panneau-anim {
+  animation: ficheApparition 0.25s ease;
+}
+@keyframes ficheApparition {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* En-tête du site */
 .site-header {
   display: flex;
