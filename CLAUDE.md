@@ -14,6 +14,7 @@ qu'accueillir, mettre en forme et diffuser ce contenu.
 - `directeur-artistique` — design system et charte
 - `dev-frontend` — pages et composants du site
 - `dev-backend` — CMS, newsletter, recherche, SEO technique
+- `illustrateur-svg` — illustrations techniques animées (SVG/CSS) des composants hydrauliques
 - `generateur-visuels` — prompts pour outil d'image IA externe (logo, posts)
 - `strategie-com` — déclinaison de chaque fiche en posts réseaux
 

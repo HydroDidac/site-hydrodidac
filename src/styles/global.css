@@ -154,7 +154,7 @@ code, pre, .valeur {
 }
 .animation-verin svg {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   height: auto;
 }
 .anim-label {
@@ -170,25 +170,40 @@ code, pre, .valeur {
   font-weight: 600;
 }
 .anim-mobile {
-  animation: verinVaEtVient 3.2s ease-in-out infinite;
+  animation: verinVaEtVient 4s ease-in-out infinite;
 }
 @keyframes verinVaEtVient {
-  0%, 12% { transform: translateX(0); }
-  50%, 62% { transform: translateX(70px); }
+  0%, 10% { transform: translateX(0); }
+  50%, 60% { transform: translateX(135px); }
   100% { transform: translateX(0); }
 }
-.anim-port {
-  animation: portClignote 3.2s ease-in-out infinite;
+.anim-port,
+.anim-chambre-fond {
+  animation: presisonFond 4s ease-in-out infinite;
 }
-.anim-port-fond { animation-delay: 0s; }
-.anim-port-tige { animation-delay: 1.6s; }
-@keyframes portClignote {
-  0%, 12% { opacity: 1; }
-  18%, 92% { opacity: 0.25; }
+.anim-chambre-tige {
+  animation: presisonTige 4s ease-in-out infinite;
+}
+@keyframes presisonFond {
+  0%, 10% { opacity: 1; }
+  50%, 90% { opacity: 0.15; }
   100% { opacity: 1; }
 }
+@keyframes presisonTige {
+  0%, 10% { opacity: 0.1; }
+  50%, 90% { opacity: 0.45; }
+  100% { opacity: 0.1; }
+}
+.anim-port-tige {
+  animation-name: presisonTigePort;
+}
+@keyframes presisonTigePort {
+  0%, 10% { opacity: 0.25; }
+  50%, 90% { opacity: 1; }
+  100% { opacity: 0.25; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .anim-mobile, .anim-port { animation: none; }
+  .anim-mobile, .anim-port, .anim-chambre-fond, .anim-chambre-tige { animation: none; }
 }
 
 /* Bandeau de fiche (avec illustration et dégradé de marque) */
