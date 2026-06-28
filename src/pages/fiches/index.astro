@@ -1,0 +1,22 @@
+---
+import Layout from "../../components/Layout.astro";
+import { getCollection } from "astro:content";
+
+const fiches = (await getCollection("fiches")).sort(
+  (a, b) => b.data.datePublication.valueOf() - a.data.datePublication.valueOf()
+);
+
+const niveauLabel = { debutant: "🟢 Débutant", intermediaire: "🟠 Intermédiaire", avance: "🔴 Avancé" };
+---
+<Layout title="Fiches — HydroDidac">
+  <main style="max-width: 720px; margin: 0 auto; padding: 2rem 1rem;">
+    <h1>Fiches didactiques</h1>
+    {fiches.map((fiche) => (
+      <a class="carte-fiche" href={`/fiches/${fiche.id}`}>
+        <span class={`pastille-niveau ${fiche.data.niveau}`}>{niveauLabel[fiche.data.niveau]}</span>
+        <h3>{fiche.data.titre}</h3>
+        <p>{fiche.data.resume}</p>
+      </a>
+    ))}
+  </main>
+</Layout>

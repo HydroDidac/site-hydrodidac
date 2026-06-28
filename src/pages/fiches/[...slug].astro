@@ -1,0 +1,74 @@
+---
+import Layout from "../../components/Layout.astro";
+import { getCollection, render } from "astro:content";
+import { getImagesForFiche } from "../../lib/images";
+
+export async function getStaticPaths() {
+  const fiches = await getCollection("fiches");
+  return fiches.map((fiche) => ({
+    params: { slug: fiche.id },
+    props: { fiche },
+  }));
+}
+
+const { fiche } = Astro.props;
+const { Content } = await render(fiche);
+const images = getImagesForFiche(fiche.data.code);
+const niveauLabel = { debutant: "🟢 Débutant", intermediaire: "🟠 Intermédiaire", avance: "🔴 Avancé" };
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: fiche.data.titre,
+  description: fiche.data.resume,
+  datePublished: fiche.data.datePublication.toISOString(),
+  image: images.cover ? new URL(images.cover.url, Astro.site).toString() : undefined,
+  about: fiche.data.module,
+};
+---
+<Layout
+  title={`${fiche.data.titre} — HydroDidac`}
+  description={fiche.data.resume}
+  structuredData={structuredData}
+>
+  <main class="fiche-page">
+    <div class="fiche-entete no-print">
+      <span class={`pastille-niveau ${fiche.data.niveau}`}>{niveauLabel[fiche.data.niveau]}</span>
+      · {fiche.data.module} · {fiche.data.tempsLecture} min
+      <button class="bouton-imprimer" onclick="window.print()">🖨️ Version imprimable</button>
+    </div>
+
+    <p class="fiche-entete-impression print-only">
+      {niveauLabel[fiche.data.niveau]} · {fiche.data.module} · {fiche.data.code}
+    </p>
+
+    <h1>{fiche.data.titre}</h1>
+
+    {images.cover && (
+      <figure class="figure-cover">
+        <img src={images.cover.url} alt={images.cover.legende} loading="eager" />
+        {images.cover.legende && <figcaption>{images.cover.legende}</figcaption>}
+      </figure>
+    )}
+
+    {images.schemas.map((schema) => (
+      <figure class="figure-schema">
+        <img src={schema.url} alt={schema.legende} loading="lazy" />
+        {schema.legende && <figcaption>{schema.legende}</figcaption>}
+      </figure>
+    ))}
+
+    <Content />
+
+    {images.illustrations.length > 0 && (
+      <div class="grille-illustrations">
+        {images.illustrations.map((illu) => (
+          <figure class="figure-illu">
+            <img src={illu.url} alt={illu.legende} loading="lazy" />
+            {illu.legende && <figcaption>{illu.legende}</figcaption>}
+          </figure>
+        ))}
+      </div>
+    )}
+  </main>
+</Layout>

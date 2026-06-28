@@ -1,0 +1,309 @@
+/* Design system HydroDidac — variables de base */
+
+:root {
+  /* Couleurs de marque */
+  --color-bleu-hydraulique: #0e5aa7;
+  --color-ambre: #f39200;
+  --color-anthracite: #1c2b36;
+  --color-blanc: #ffffff;
+  --color-gris-clair: #f4f6f8;
+  --color-gris-bordure: #dde3e8;
+
+  /* Couleurs fonctionnelles */
+  --color-securite-fond: #fde8e8;
+  --color-securite-bordure: #c0392b;
+  --color-formule-fond: #eef4fb;
+  --color-formule-bordure: var(--color-bleu-hydraulique);
+
+  /* Niveaux */
+  --color-niveau-debutant: #2e8b57;
+  --color-niveau-intermediaire: #e08600;
+  --color-niveau-avance: #c0392b;
+
+  /* Typographie */
+  --font-titres: "Space Grotesk", system-ui, sans-serif;
+  --font-texte: "Inter", system-ui, sans-serif;
+  --font-valeurs: "JetBrains Mono", monospace;
+
+  --taille-h1: 2.25rem;
+  --taille-h2: 1.5rem;
+  --taille-h3: 1.25rem;
+  --taille-texte: 1rem;
+  --taille-petit: 0.875rem;
+
+  /* Espacements (échelle x8) */
+  --espace-1: 0.5rem;
+  --espace-2: 1rem;
+  --espace-3: 1.5rem;
+  --espace-4: 2rem;
+  --espace-6: 3rem;
+
+  --rayon-carte: 0.5rem;
+  --ombre-carte: 0 1px 3px rgba(28, 43, 54, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-texte);
+  font-size: var(--taille-texte);
+  color: var(--color-anthracite);
+  background: var(--color-blanc);
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-titres);
+  color: var(--color-anthracite);
+  line-height: 1.2;
+}
+
+h1 { font-size: var(--taille-h1); }
+h2 { font-size: var(--taille-h2); }
+h3 { font-size: var(--taille-h3); }
+
+a {
+  color: var(--color-bleu-hydraulique);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+code, pre, .valeur {
+  font-family: var(--font-valeurs);
+  font-size: 0.95em;
+}
+
+/* Pastille de niveau */
+.pastille-niveau {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-family: var(--font-texte);
+  font-size: var(--taille-petit);
+  font-weight: 600;
+  padding: 0.2em 0.6em;
+  border-radius: 999px;
+}
+.pastille-niveau.debutant {
+  color: var(--color-niveau-debutant);
+  background: color-mix(in srgb, var(--color-niveau-debutant) 12%, white);
+}
+.pastille-niveau.intermediaire {
+  color: var(--color-niveau-intermediaire);
+  background: color-mix(in srgb, var(--color-niveau-intermediaire) 12%, white);
+}
+.pastille-niveau.avance {
+  color: var(--color-niveau-avance);
+  background: color-mix(in srgb, var(--color-niveau-avance) 12%, white);
+}
+
+/* Carte de fiche (liste des fiches) */
+.carte-fiche {
+  display: block;
+  padding: var(--espace-3);
+  border: 1px solid var(--color-gris-bordure);
+  border-radius: var(--rayon-carte);
+  box-shadow: var(--ombre-carte);
+  margin-bottom: var(--espace-2);
+  transition: border-color 0.15s ease;
+}
+.carte-fiche:hover {
+  border-color: var(--color-bleu-hydraulique);
+}
+.carte-fiche h3 {
+  margin: var(--espace-1) 0 var(--espace-1) 0;
+}
+.carte-fiche p {
+  margin: 0;
+  color: #51606b;
+}
+
+/* Encadré formules clés */
+.encadre-formules {
+  background: var(--color-formule-fond);
+  border-left: 4px solid var(--color-formule-bordure);
+  border-radius: var(--rayon-carte);
+  padding: var(--espace-2) var(--espace-3);
+  margin: var(--espace-3) 0;
+}
+
+/* En-tête du site */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--espace-2) var(--espace-2);
+  border-bottom: 1px solid var(--color-gris-bordure);
+}
+.site-header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-1);
+  font-family: var(--font-titres);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--color-anthracite);
+}
+.site-header nav a {
+  font-family: var(--font-texte);
+  font-size: var(--taille-petit);
+  font-weight: 600;
+  color: var(--color-bleu-hydraulique);
+}
+
+/* Pied de page */
+.site-footer {
+  max-width: 760px;
+  margin: var(--espace-6) auto 0;
+  padding: var(--espace-3) var(--espace-2);
+  border-top: 1px solid var(--color-gris-bordure);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--espace-2);
+  color: #51606b;
+  font-size: var(--taille-petit);
+}
+.site-footer nav {
+  display: flex;
+  gap: var(--espace-2);
+}
+.site-footer nav a {
+  color: #51606b;
+}
+.site-footer nav a:hover {
+  color: var(--color-bleu-hydraulique);
+}
+
+/* Encadré sécurité */
+.encadre-securite {
+  background: var(--color-securite-fond);
+  border-left: 4px solid var(--color-securite-bordure);
+  border-radius: var(--rayon-carte);
+  padding: var(--espace-2) var(--espace-3);
+  margin: var(--espace-3) 0;
+  font-weight: 600;
+}
+
+/* Page fiche : mise en page commune */
+.fiche-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--espace-4) var(--espace-2);
+}
+
+.fiche-entete {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  color: #51606b;
+  font-size: var(--taille-petit);
+  margin-bottom: var(--espace-1);
+}
+
+.bouton-imprimer {
+  margin-left: auto;
+  font-family: var(--font-texte);
+  font-size: var(--taille-petit);
+  background: var(--color-gris-clair);
+  border: 1px solid var(--color-gris-bordure);
+  border-radius: var(--rayon-carte);
+  padding: 0.4em 0.8em;
+  cursor: pointer;
+}
+.bouton-imprimer:hover {
+  border-color: var(--color-bleu-hydraulique);
+}
+
+/* Figures (couverture, schémas, illustrations) — rendu identique pour toutes
+   les fiches : c'est ce qui garantit la cohérence visuelle entre fiches. */
+.figure-cover,
+.figure-schema,
+.figure-illu {
+  margin: var(--espace-3) 0;
+  text-align: center;
+}
+.figure-cover img,
+.figure-schema img,
+.figure-illu img {
+  max-width: 100%;
+  border-radius: var(--rayon-carte);
+  border: 1px solid var(--color-gris-bordure);
+}
+.figure-cover img {
+  max-height: 360px;
+  object-fit: cover;
+}
+.figure-schema {
+  background: var(--color-gris-clair);
+  border-radius: var(--rayon-carte);
+  padding: var(--espace-2);
+}
+figcaption {
+  font-size: var(--taille-petit);
+  color: #51606b;
+  margin-top: var(--espace-1);
+}
+
+.grille-illustrations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--espace-2);
+  margin: var(--espace-3) 0;
+}
+
+/* Version imprimable */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block;
+  }
+  body {
+    color: #000;
+    background: #fff;
+  }
+  .fiche-page {
+    max-width: 100%;
+    padding: 0;
+  }
+  a {
+    color: #000;
+    text-decoration: underline;
+  }
+  .encadre-securite,
+  .encadre-formules,
+  .figure-schema {
+    border: 1px solid #000;
+    background: #fff !important;
+    break-inside: avoid;
+  }
+  .encadre-securite {
+    border-left-width: 4px;
+  }
+  .figure-cover,
+  .figure-schema,
+  .figure-illu,
+  h2, h3 {
+    break-inside: avoid;
+    break-after: avoid;
+  }
+  .pastille-niveau {
+    border: 1px solid #000;
+    background: #fff !important;
+    color: #000 !important;
+  }
+}

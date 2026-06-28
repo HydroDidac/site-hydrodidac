@@ -1,0 +1,7 @@
+name = "hydrodidac-cms-auth"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+# Les secrets (GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET) ne se mettent pas ici :
+# ils se configurent avec `wrangler secret put GITHUB_CLIENT_ID` etc.
+# Voir DEPLOIEMENT.md à la racine du projet pour la procédure complète.
