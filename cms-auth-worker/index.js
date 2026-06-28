@@ -2,12 +2,23 @@
 // Implémente le protocole OAuth attendu par le backend "github" de Decap CMS :
 // /auth -> redirige vers GitHub ; /callback -> échange le code contre un token
 // et le renvoie à la fenêtre du CMS via postMessage.
+//
+// Le paramètre "state" est stocké dans un cookie signé temporaire (httpOnly,
+// secure, 10 min) à l'étape /auth, puis vérifié à l'étape /callback : c'est
+// la protection standard contre les attaques CSRF sur ce flux OAuth.
 
 const GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize";
 const GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token";
+const STATE_COOKIE = "oauth_state";
 
 function randomState() {
   return crypto.randomUUID();
+}
+
+function getCookie(request, name) {
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+  return match ? match[1] : null;
 }
 
 async function handleAuth(request, env) {
@@ -22,7 +33,13 @@ async function handleAuth(request, env) {
   authorizeUrl.searchParams.set("scope", scope);
   authorizeUrl.searchParams.set("state", state);
 
-  return Response.redirect(authorizeUrl.toString(), 302);
+  const headers = new Headers({ Location: authorizeUrl.toString() });
+  headers.append(
+    "Set-Cookie",
+    `${STATE_COOKIE}=${state}; HttpOnly; Secure; SameSite=Lax; Max-Age=600; Path=/callback`
+  );
+
+  return new Response(null, { status: 302, headers });
 }
 
 function renderCallbackPage(success, payload) {
@@ -44,12 +61,24 @@ function renderCallbackPage(success, payload) {
   })();
 </script>
 </body></html>`;
-  return new Response(html, { headers: { "content-type": "text/html;charset=UTF-8" } });
+  return new Response(html, {
+    headers: {
+      "content-type": "text/html;charset=UTF-8",
+      // Le cookie de state n'a plus d'utilité une fois le callback traité.
+      "Set-Cookie": `${STATE_COOKIE}=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/callback`,
+    },
+  });
 }
 
 async function handleCallback(request, env) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state");
+  const expectedState = getCookie(request, STATE_COOKIE);
+
+  if (!state || !expectedState || state !== expectedState) {
+    return renderCallbackPage(false, { error: "invalid_state" });
+  }
 
   if (!code) {
     return renderCallbackPage(false, { error: "missing_code" });
