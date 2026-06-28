@@ -1,0 +1,28 @@
+---
+import { getCollection } from "astro:content";
+import { MODULES } from "../lib/modules";
+
+const fiches = await getCollection("fiches");
+const compteParModule = new Map<string, number>();
+for (const fiche of fiches) {
+  const cle = fiche.data.module;
+  compteParModule.set(cle, (compteParModule.get(cle) ?? 0) + 1);
+}
+---
+<nav class="sommaire no-print" aria-label="Sommaire des fiches techniques">
+  <h2 class="sommaire-titre">Sommaire</h2>
+  <ol class="sommaire-liste">
+    {MODULES.map((module) => {
+      const nb = compteParModule.get(module.nom) ?? 0;
+      return (
+        <li>
+          <a href={`/fiches#module-${module.slug}`} class={nb === 0 ? "sommaire-vide" : ""}>
+            <span class="sommaire-numero">{module.numero}</span>
+            <span>{module.nom}</span>
+            <span class="sommaire-compte">{nb}</span>
+          </a>
+        </li>
+      );
+    })}
+  </ol>
+</nav>

@@ -1,22 +1,36 @@
 ---
 import Layout from "../../components/Layout.astro";
 import { getCollection } from "astro:content";
+import { MODULES } from "../../lib/modules";
 
-const fiches = (await getCollection("fiches")).sort(
-  (a, b) => b.data.datePublication.valueOf() - a.data.datePublication.valueOf()
-);
-
+const fiches = await getCollection("fiches");
 const niveauLabel = { debutant: "🟢 Débutant", intermediaire: "🟠 Intermédiaire", avance: "🔴 Avancé" };
+
+const groupes = MODULES.map((module) => ({
+  module,
+  fiches: fiches
+    .filter((f) => f.data.module === module.nom)
+    .sort((a, b) => b.data.datePublication.valueOf() - a.data.datePublication.valueOf()),
+}));
 ---
 <Layout title="Fiches — HydroDidac">
-  <main style="max-width: 720px; margin: 0 auto; padding: 2rem 1rem;">
+  <main style="max-width: 760px; margin: 0 auto; padding: 2rem 1rem;">
     <h1>Fiches didactiques</h1>
-    {fiches.map((fiche) => (
-      <a class="carte-fiche" href={`/fiches/${fiche.id}`}>
-        <span class={`pastille-niveau ${fiche.data.niveau}`}>{niveauLabel[fiche.data.niveau]}</span>
-        <h3>{fiche.data.titre}</h3>
-        <p>{fiche.data.resume}</p>
-      </a>
+    {groupes.map(({ module, fiches }) => (
+      <section id={`module-${module.slug}`} style="margin-top: 2rem;">
+        <h2>{module.numero} · {module.nom}</h2>
+        {fiches.length > 0 ? (
+          fiches.map((fiche) => (
+            <a class="carte-fiche" href={`/fiches/${fiche.id}`}>
+              <span class={`pastille-niveau ${fiche.data.niveau}`}>{niveauLabel[fiche.data.niveau]}</span>
+              <h3>{fiche.data.titre}</h3>
+              <p>{fiche.data.resume}</p>
+            </a>
+          ))
+        ) : (
+          <p style="color: #51606b; font-size: var(--taille-petit);">Aucune fiche publiée pour le moment dans ce module.</p>
+        )}
+      </section>
     ))}
   </main>
 </Layout>

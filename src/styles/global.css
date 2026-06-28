@@ -183,6 +183,76 @@ code, pre, .valeur {
   color: var(--color-bleu-hydraulique);
 }
 
+/* Sommaire (page d'accueil) */
+.page-avec-sommaire {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: var(--espace-4);
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  align-items: start;
+}
+.sommaire {
+  position: sticky;
+  top: var(--espace-2);
+  border: 1px solid var(--color-gris-bordure);
+  border-radius: var(--rayon-carte);
+  padding: var(--espace-2);
+  background: var(--color-gris-clair);
+}
+.sommaire-titre {
+  font-size: 1rem;
+  margin: 0 0 var(--espace-2) 0;
+}
+.sommaire-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.sommaire-liste a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  padding: 0.3em 0.4em;
+  border-radius: 0.3em;
+  color: var(--color-anthracite);
+  font-size: var(--taille-petit);
+  text-decoration: none;
+}
+.sommaire-liste a:hover {
+  background: white;
+  color: var(--color-bleu-hydraulique);
+}
+.sommaire-numero {
+  font-family: var(--font-valeurs);
+  color: var(--color-bleu-hydraulique);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.sommaire-compte {
+  margin-left: auto;
+  font-family: var(--font-valeurs);
+  font-size: 0.75rem;
+  color: #51606b;
+  flex-shrink: 0;
+}
+.sommaire-liste a.sommaire-vide {
+  opacity: 0.55;
+}
+
+@media (max-width: 760px) {
+  .page-avec-sommaire {
+    grid-template-columns: 1fr;
+  }
+  .sommaire {
+    position: static;
+  }
+}
+
 /* Encadré sécurité */
 .encadre-securite {
   background: var(--color-securite-fond);
