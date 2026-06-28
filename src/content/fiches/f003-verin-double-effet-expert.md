@@ -7,6 +7,7 @@ resume: "Le vérin double effet est poussé ET tiré par l'huile : pas besoin de
 tempsLecture: 5
 ficheLiees: []
 datePublication: 2026-06-28
+refPoleB: "04.01"
 ---
 
 ## 1. Définition en une phrase

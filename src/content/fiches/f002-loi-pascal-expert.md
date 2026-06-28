@@ -7,6 +7,7 @@ resume: "La loi de Pascal explique pourquoi une petite force sur un petit piston
 tempsLecture: 5
 ficheLiees: []
 datePublication: 2026-06-28
+refPoleB: "01.01"
 ---
 
 > Sources : `sources/pdf-cours/PRINCIPES FONDAMENTAUX DE L'HYDR.pdf` (§3.2) et

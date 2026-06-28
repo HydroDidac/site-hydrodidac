@@ -12,6 +12,7 @@ const fiches = defineCollection({
     tempsLecture: z.number().optional(), // minutes
     ficheLiees: z.array(z.string()).default([]), // codes des fiches liées
     datePublication: z.coerce.date(),
+    refPoleB: z.string().optional(), // numéro de la fiche source au Pôle B, ex. "04.01"
   }),
 });
 

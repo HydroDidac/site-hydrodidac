@@ -7,6 +7,7 @@ resume: "La loi de Pascal explique pourquoi une petite force sur un petit piston
 tempsLecture: 4
 ficheLiees: []
 datePublication: 2026-06-28
+refPoleB: "01.01"
 ---
 
 ## 1. Définition en une phrase
