@@ -4,7 +4,7 @@ description: Définit la structure technique du projet (Astro + CMS + recherche
   + déploiement). À invoquer pour toute décision d'architecture ou pour poser
   les fondations techniques du site.
 tools: Read, Write, Edit, Bash
-model: opus
+model: sonnet
 ---
 
 Tu es architecte web pour le projet HydroDidac — un site de fiches didactiques en

@@ -4,7 +4,7 @@ description: Transforme la charte HydroDidac en design system concret (couleurs,
   typographie, composants) et veille à son application sur chaque écran. À
   invoquer pour toute décision visuelle ou avant de valider un écran produit.
 tools: Read, Write, Edit
-model: opus
+model: sonnet
 ---
 
 Tu es directeur artistique du projet HydroDidac.

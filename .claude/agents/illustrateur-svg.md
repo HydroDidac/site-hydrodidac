@@ -15,15 +15,36 @@ d'une fiche à l'autre, jamais des plans techniques normés ISO 1219 — la fich
 reste un support pédagogique, pas une documentation constructeur.
 
 ## Référence obligatoire avant de commencer
-Avant toute nouvelle illustration, lis `src/components/AnimationVerin.astro`
-(premier exemple du genre, déjà en production) et `src/styles/global.css`
-(sections `.animation-*`, `.anim-*`) : ce sont les conventions à reproduire,
-pas à réinventer à chaque fois.
+Avant toute nouvelle illustration, lis dans l'ordre :
+1. `CHARTE_GRAPHIQUE_HYDRODIDAC.md` (section "Charte des schémas techniques
+   animés (SVG)") — les conventions de couleur des lignes de circuit, à
+   respecter sans exception.
+2. `src/components/AnimationVerin.astro` (premier exemple du genre, déjà en
+   production) et `src/styles/global.css` (sections `.animation-*`, `.anim-*`)
+   — les conventions de structure à reproduire, pas à réinventer.
 
-## Conventions techniques à respecter systématiquement
-- **Couleurs** : uniquement les variables CSS de la charte (`var(--color-bleu-hydraulique)`,
-  `var(--color-ambre)`, `var(--color-anthracite)`, `var(--color-gris-clair)`,
-  `var(--color-gris-bordure)`, `var(--color-blanc)`) — jamais de couleur en dur.
+## Conventions de couleur des lignes de circuit (obligatoire)
+| Type de ligne | Variable CSS | Couleur | Style |
+|---|---|---|---|
+| Pression / refoulement (P) | `var(--color-ligne-pression)` | Rouge | Trait plein |
+| Retour / réservoir (T) | `var(--color-ligne-retour)` | Bleu hydraulique | Trait plein |
+| Pilotage (X) | `var(--color-ligne-pilotage)` | Orange | Trait **pointillé** |
+| Drain / fuite interne (Y) | `var(--color-ligne-drain)` | Vert | Trait pointillé fin |
+
+- Une ligne garde la même couleur sur tout son parcours, même à travers
+  plusieurs composants.
+- Le pointillé est réservé au pilotage et au drain — jamais à une ligne P/T.
+- Si un même orifice change de rôle selon la phase de fonctionnement (ex. un
+  vérin double effet où chaque côté alterne pression/retour), superposer les
+  deux couleurs (deux éléments empilés) et n'animer que l'opacité — ne jamais
+  changer la couleur d'un même élément en JS/CSS `fill` direct, pour rester
+  cohérent avec la technique déjà utilisée sur le vérin.
+
+## Conventions techniques générales à respecter systématiquement
+- **Couleurs de structure/marque** (corps, pièces mobiles, cotes) : uniquement
+  les variables CSS de la charte (`var(--color-anthracite)`,
+  `var(--color-ambre)`, `var(--color-gris-clair)`, `var(--color-gris-bordure)`,
+  `var(--color-blanc)`) — jamais de couleur en dur.
 - **Coupe technique** : parties métalliques fixes (corps, culasses) en motif de
   hachures (`<pattern id="hachure">`, déjà défini, à réutiliser ou dupliquer à
   l'identique avec un id unique par composant pour éviter les collisions DOM).
@@ -67,6 +88,7 @@ pas à réinventer à chaque fois.
    l'illustration apparaît sur les bonnes fiches et seulement celles-là.
 
 ## Checklist avant de livrer
+- [ ] Lignes P/T/X/Y dans les bonnes couleurs et le bon style de trait (voir tableau ci-dessus)
 - [ ] Aucune couleur ni police en dur, uniquement les variables de la charte
 - [ ] Animation fluide, boucle cohérente, pas de saut visuel au reset
 - [ ] `prefers-reduced-motion` géré

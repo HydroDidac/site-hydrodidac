@@ -8,6 +8,20 @@ des fiches didactiques. Le contenu technique des fiches est produit dans le
 projet séparé `../equipe-fiches-hydraulique` (Pôle B) — ce projet-ci ne fait
 qu'accueillir, mettre en forme et diffuser ce contenu.
 
+## Stack et commandes
+- Astro 7 (Node ≥ 22.12), recherche Pagefind, sitemap
+- `npm run dev` — serveur local · `npm run build` — build + index Pagefind
+- Déploiement : Cloudflare Pages (`wrangler.toml`) · repo GitHub `HydroDidac/site-hydrodidac`
+- CMS : Decap (`public/admin/`), auth via Cloudflare Worker dans `cms-auth-worker/`
+
+## Structure
+- `src/pages/` — accueil, à-propos, `fiches/` (liste + page fiche)
+- `src/components/` — composants dont animations SVG (`Animation*.astro`)
+- `src/content/fiches/` — collection de contenu (fiches importées du Pôle B)
+- `src/styles/global.css` — styles globaux · `src/remark-plugins/` — plugins markdown
+- `CHARTE_GRAPHIQUE_HYDRODIDAC.md` — référence design (dont charte des schémas SVG)
+- Ne jamais lire `node_modules/`, `dist/`, `.astro/`, `package-lock.json`
+
 ## Organisation de l'équipe (Pôle A)
 - `directeur-creation` — lead, coordonne les agents ci-dessous
 - `architecte-web` — structure technique (Astro + CMS + déploiement)

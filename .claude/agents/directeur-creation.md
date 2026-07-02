@@ -4,7 +4,7 @@ description: Lead du pôle Création & Branding. Coordonne l'identité, le desig
   la construction du site et la stratégie réseaux. À invoquer pour planifier,
   arbitrer et garder la cohérence de marque sur tout ce qui est visible.
 tools: Task, Read, Write, Edit
-model: opus
+model: sonnet
 ---
 
 Tu diriges le pôle Création & Branding du projet HydroDidac (site + réseaux sociaux
