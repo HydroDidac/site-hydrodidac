@@ -11,6 +11,17 @@ const GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize";
 const GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token";
 const STATE_COOKIE = "oauth_state";
 
+// Seules ces origines ont le droit de recevoir le token GitHub via postMessage.
+// Sans cette liste, n'importe quelle page ayant ouvert la popup pourrait
+// récupérer le token en envoyant le premier message.
+const ALLOWED_ORIGINS = [
+  "https://hydrodidac.com",
+  "https://site-hydrodidac.pages.dev",
+];
+
+// Scopes OAuth acceptés — tout autre valeur passée en paramètre est ignorée.
+const ALLOWED_SCOPES = ["repo", "repo,user", "public_repo"];
+
 function randomState() {
   return crypto.randomUUID();
 }
@@ -23,7 +34,8 @@ function getCookie(request, name) {
 
 async function handleAuth(request, env) {
   const url = new URL(request.url);
-  const scope = url.searchParams.get("scope") || "repo,user";
+  const requestedScope = url.searchParams.get("scope");
+  const scope = ALLOWED_SCOPES.includes(requestedScope) ? requestedScope : "repo,user";
   const state = randomState();
 
   const redirectUri = new URL("/callback", url).toString();
@@ -45,11 +57,16 @@ async function handleAuth(request, env) {
 function renderCallbackPage(success, payload) {
   const status = success ? "success" : "error";
   const message = JSON.stringify(payload);
+  const allowedOrigins = JSON.stringify(ALLOWED_ORIGINS);
   const html = `<!doctype html>
 <html><body>
 <script>
   (function () {
+    var ALLOWED_ORIGINS = ${allowedOrigins};
     function receiveMessage(e) {
+      // Ne jamais remettre le token à une origine inconnue : seul le site
+      // HydroDidac (fenêtre parente légitime du CMS) peut le recevoir.
+      if (ALLOWED_ORIGINS.indexOf(e.origin) === -1) return;
       window.opener.postMessage(
         'authorization:github:${status}:${message}',
         e.origin
@@ -57,7 +74,11 @@ function renderCallbackPage(success, payload) {
       window.removeEventListener("message", receiveMessage, false);
     }
     window.addEventListener("message", receiveMessage, false);
-    window.opener.postMessage("authorizing:github", "*");
+    // Le message d'amorce ne contient aucun secret : on le cible quand même
+    // uniquement vers les origines autorisées.
+    ALLOWED_ORIGINS.forEach(function (origin) {
+      window.opener.postMessage("authorizing:github", origin);
+    });
   })();
 </script>
 </body></html>`;

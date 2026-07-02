@@ -1,0 +1,19 @@
+# Consignes de sécurité envoyées aux navigateurs par Cloudflare Pages.
+# Documentation : https://developers.cloudflare.com/pages/configuration/headers/
+
+/*
+  # Interdit d'afficher le site dans un cadre (iframe) sur un autre site
+  # — protection contre le clickjacking (boutons invisibles superposés).
+  X-Frame-Options: DENY
+  # Le navigateur ne doit pas "deviner" le type d'un fichier — empêche
+  # de faire passer un fichier piégé pour une image ou un script.
+  X-Content-Type-Options: nosniff
+  # En suivant un lien sortant, ne transmet que le nom du site, pas l'URL
+  # complète de la page d'origine.
+  Referrer-Policy: strict-origin-when-cross-origin
+  # Le site n'utilise ni caméra, ni micro, ni géolocalisation : on le déclare,
+  # aucun script ne pourra les demander.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  # Force le HTTPS pendant 1 an : le navigateur refusera toute connexion
+  # non chiffrée, même si quelqu'un tape http://
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
