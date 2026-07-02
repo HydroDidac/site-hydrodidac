@@ -40,8 +40,13 @@ const structuredData = {
   about: groupe.module,
 };
 ---
-<Layout title={`${groupe.titre} — HydroDidac`} description={groupe.resume} structuredData={structuredData}>
-  <main class="fiche-page">
+<Layout
+  title={`${groupe.titre} — HydroDidac`}
+  description={groupe.resume}
+  ogImage={images.cover?.url}
+  structuredData={structuredData}
+>
+  <main id="contenu" class="fiche-page">
     <div class="fiche-banniere no-print">
       <IllustrationBanniere type="verin" />
       <div class="fiche-banniere-texte">

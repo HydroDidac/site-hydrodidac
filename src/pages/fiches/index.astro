@@ -14,7 +14,7 @@ const sections = MODULES.map((module) => ({
 }));
 ---
 <Layout title="Fiches — HydroDidac">
-  <main style="max-width: 760px; margin: 0 auto; padding: 2rem 1rem;">
+  <main id="contenu" style="max-width: 760px; margin: 0 auto; padding: 2rem 1rem;">
     <h1>Fiches didactiques</h1>
     {sections.map(({ module, groupes }) => (
       <section id={`module-${module.slug}`} style="margin-top: 2rem;">

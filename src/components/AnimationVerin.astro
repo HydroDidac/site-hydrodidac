@@ -1,8 +1,10 @@
 ---
 // Animation pédagogique d'un vérin double effet en coupe : la tige avance et
-// recule en boucle, chambres colorées selon le côté sous pression, cotes D
-// (alésage), d (tige) et Course en bas. Schéma de principe à but pédagogique,
-// inspiré des coupes techniques classiques — pas un plan ISO normé.
+// recule en boucle. Conventions de couleur conformes à la charte SVG
+// (voir CHARTE_GRAPHIQUE_HYDRODIDAC.md) : pression en rouge (trait plein),
+// retour en bleu (trait plein). Comme les deux orifices alternent leur rôle
+// (pression ou retour) selon le sens de mouvement, chaque chambre/orifice
+// superpose les deux couleurs et seule l'opacité active change.
 ---
 <figure class="animation-verin no-print">
   <svg viewBox="0 0 480 230" role="img" aria-label="Coupe animée d'un vérin double effet en mouvement">
@@ -24,27 +26,27 @@
     <rect x="72" y="142" width="220" height="8" fill="url(#hachure)" />
     <rect x="72" y="70" width="220" height="80" fill="none" stroke="var(--color-anthracite)" stroke-width="1.5" />
 
-    <!-- Chambres (fond / tige) avec mise en evidence du cote sous pression -->
-    <rect class="anim-chambre anim-chambre-fond" x="73" y="78" width="217" height="64" fill="var(--color-bleu-hydraulique)" />
-    <rect class="anim-chambre anim-chambre-tige" x="73" y="78" width="217" height="64" fill="var(--color-ambre)" />
+    <!-- Chambre fond : superposition pression (rouge) / retour (bleu) -->
+    <rect class="anim-fond-pression" x="73" y="78" width="217" height="64" fill="var(--color-ligne-pression)" />
+    <rect class="anim-fond-retour" x="73" y="78" width="217" height="64" fill="var(--color-ligne-retour)" />
+
+    <!-- Chambre tige : superposition pression (rouge) / retour (bleu), en phase inverse -->
+    <rect class="anim-tige-pression" x="73" y="78" width="217" height="64" fill="var(--color-ligne-pression)" />
+    <rect class="anim-tige-retour" x="73" y="78" width="217" height="64" fill="var(--color-ligne-retour)" />
 
     <!-- Culasse tete / presse-etoupe (cote droit, fixe, passage pour la tige) -->
     <rect x="292" y="55" width="20" height="45" fill="url(#hachure)" stroke="var(--color-anthracite)" stroke-width="1.5" />
     <rect x="292" y="120" width="20" height="45" fill="url(#hachure)" stroke="var(--color-anthracite)" stroke-width="1.5" />
 
-    <!-- Orifice P (fond) -->
-    <g class="anim-port anim-port-fond">
-      <rect x="100" y="50" width="10" height="20" fill="var(--color-gris-bordure)" stroke="var(--color-anthracite)" stroke-width="1" />
-      <path d="M105,32 L99,46 L111,46 Z" fill="var(--color-bleu-hydraulique)" />
-      <text x="105" y="24" text-anchor="middle" class="anim-label">P</text>
-    </g>
+    <!-- Orifice cote fond : trait de raccordement + fleche, couleur selon phase -->
+    <line x1="105" y1="55" x2="105" y2="20" class="anim-ligne anim-fond-pression" stroke="var(--color-ligne-pression)" stroke-width="3" fill="none" />
+    <line x1="105" y1="55" x2="105" y2="20" class="anim-ligne anim-fond-retour" stroke="var(--color-ligne-retour)" stroke-width="3" fill="none" />
+    <text x="105" y="14" text-anchor="middle" class="anim-label">Orifice fond</text>
 
-    <!-- Orifice T (tige) -->
-    <g class="anim-port anim-port-tige">
-      <rect x="255" y="50" width="10" height="20" fill="var(--color-gris-bordure)" stroke="var(--color-anthracite)" stroke-width="1" />
-      <path d="M260,32 L254,46 L266,46 Z" fill="var(--color-ambre)" />
-      <text x="260" y="24" text-anchor="middle" class="anim-label">T</text>
-    </g>
+    <!-- Orifice cote tige : meme principe, phase inverse -->
+    <line x1="260" y1="55" x2="260" y2="20" class="anim-ligne anim-tige-pression" stroke="var(--color-ligne-pression)" stroke-width="3" fill="none" />
+    <line x1="260" y1="55" x2="260" y2="20" class="anim-ligne anim-tige-retour" stroke="var(--color-ligne-retour)" stroke-width="3" fill="none" />
+    <text x="260" y="14" text-anchor="middle" class="anim-label">Orifice tige</text>
 
     <!-- Groupe mobile : piston + tige + oeil d'attache (position de depart = retracte) -->
     <g class="anim-mobile">
@@ -75,8 +77,12 @@
     <text x="182" y="216" text-anchor="middle" class="anim-label">Course</text>
 
     <!-- Labels chambres -->
-    <text x="110" y="135" text-anchor="middle" class="anim-label anim-label-petit">S₁ (fond)</text>
-    <text x="245" y="135" text-anchor="middle" class="anim-label anim-label-petit">S₂ (tige)</text>
+    <text x="110" y="135" text-anchor="middle" class="anim-label anim-label-petit anim-label-blanc">S₁ (fond)</text>
+    <text x="245" y="135" text-anchor="middle" class="anim-label anim-label-petit anim-label-blanc">S₂ (tige)</text>
   </svg>
-  <figcaption>Vérin double effet en mouvement — D = diamètre d'alésage, d = diamètre de tige, S₁/S₂ = surfaces fond/tige.</figcaption>
+  <figcaption>
+    Vérin double effet en mouvement — rouge = ligne sous pression, bleu = ligne
+    de retour (les deux orifices alternent ce rôle selon le sens de
+    déplacement). D = alésage, d = tige, S₁/S₂ = surfaces fond/tige.
+  </figcaption>
 </figure>

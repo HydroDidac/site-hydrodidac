@@ -20,6 +20,12 @@
   --color-niveau-intermediaire: #e08600;
   --color-niveau-avance: #c0392b;
 
+  /* Lignes de circuit dans les schémas SVG (voir CHARTE_GRAPHIQUE_HYDRODIDAC.md) */
+  --color-ligne-pression: #c0392b;
+  --color-ligne-retour: #0e5aa7;
+  --color-ligne-pilotage: #f39200;
+  --color-ligne-drain: #2e8b57;
+
   /* Typographie */
   --font-titres: "Space Grotesk", system-ui, sans-serif;
   --font-texte: "Inter", system-ui, sans-serif;
@@ -55,13 +61,48 @@ body {
   line-height: 1.6;
 }
 
+/* Lien d'évitement : invisible jusqu'à ce qu'un utilisateur clavier
+   fasse Tab en arrivant sur la page — il saute alors direct au contenu. */
+.lien-evitement {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--color-anthracite);
+  color: white;
+  padding: 0.6em 1em;
+  border-radius: 0 0 var(--rayon-carte) 0;
+  font-weight: 600;
+}
+.lien-evitement:focus {
+  left: 0;
+}
+
+/* Contour de focus visible et cohérent pour la navigation au clavier */
+:focus-visible {
+  outline: 3px solid var(--color-ambre);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Les titres d'ancres ne se cachent pas sous l'en-tête collant */
+h1, h2, h3, [id] {
+  scroll-margin-top: 5rem;
+}
+
+/* Sélection de texte aux couleurs de la marque */
+::selection {
+  background: color-mix(in srgb, var(--color-bleu-hydraulique) 20%, white);
+}
+
 h1, h2, h3 {
   font-family: var(--font-titres);
   color: var(--color-anthracite);
   line-height: 1.2;
+  text-wrap: balance;
 }
 
-h1 { font-size: var(--taille-h1); }
+h1 { font-size: clamp(1.7rem, 4vw + 0.5rem, var(--taille-h1)); }
 h2 { font-size: var(--taille-h2); }
 h3 { font-size: var(--taille-h3); }
 
@@ -177,33 +218,36 @@ code, pre, .valeur {
   50%, 60% { transform: translateX(135px); }
   100% { transform: translateX(0); }
 }
-.anim-port,
-.anim-chambre-fond {
-  animation: presisonFond 4s ease-in-out infinite;
+/* Le fond est sous pression (rouge) pendant que la tige sort (extension),
+   et en retour (bleu) pendant qu'elle rentre (rétraction) — l'orifice tige
+   fait exactement l'inverse au même instant. */
+.anim-fond-pression,
+.anim-tige-retour {
+  animation: ligneActiveA 4s ease-in-out infinite;
 }
-.anim-chambre-tige {
-  animation: presisonTige 4s ease-in-out infinite;
+.anim-fond-retour,
+.anim-tige-pression {
+  animation: ligneActiveB 4s ease-in-out infinite;
 }
-@keyframes presisonFond {
-  0%, 10% { opacity: 1; }
-  50%, 90% { opacity: 0.15; }
+@keyframes ligneActiveA {
+  0%, 48% { opacity: 1; }
+  52%, 98% { opacity: 0.12; }
   100% { opacity: 1; }
 }
-@keyframes presisonTige {
-  0%, 10% { opacity: 0.1; }
-  50%, 90% { opacity: 0.45; }
-  100% { opacity: 0.1; }
+@keyframes ligneActiveB {
+  0%, 48% { opacity: 0.12; }
+  52%, 98% { opacity: 1; }
+  100% { opacity: 0.12; }
 }
-.anim-port-tige {
-  animation-name: presisonTigePort;
-}
-@keyframes presisonTigePort {
-  0%, 10% { opacity: 0.25; }
-  50%, 90% { opacity: 1; }
-  100% { opacity: 0.25; }
+.anim-ligne {
+  stroke-linecap: round;
 }
 @media (prefers-reduced-motion: reduce) {
-  .anim-mobile, .anim-port, .anim-chambre-fond, .anim-chambre-tige { animation: none; }
+  .anim-mobile,
+  .anim-fond-pression, .anim-fond-retour,
+  .anim-tige-pression, .anim-tige-retour {
+    animation: none;
+  }
 }
 
 /* Bandeau de fiche (avec illustration et dégradé de marque) */
@@ -286,7 +330,17 @@ code, pre, .valeur {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* En-tête du site */
+/* En-tête du site — collant, avec léger flou du contenu qui défile dessous
+   (même effet que les documentations Stripe/Astro/MDN) */
+.site-header-bande {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--color-blanc) 88%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-gris-bordure);
+}
 .site-header {
   display: flex;
   align-items: center;
@@ -294,7 +348,10 @@ code, pre, .valeur {
   max-width: 760px;
   margin: 0 auto;
   padding: var(--espace-2) var(--espace-2);
-  border-bottom: 1px solid var(--color-gris-bordure);
+}
+.site-header nav {
+  display: flex;
+  gap: var(--espace-2);
 }
 .site-header-brand {
   display: flex;
