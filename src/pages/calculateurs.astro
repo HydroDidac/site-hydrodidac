@@ -1,0 +1,1048 @@
+---
+import Layout from "../components/Layout.astro";
+import { huiles, infosFamille } from "../data/huiles-hydrauliques.js";
+
+const marques = [...new Set(huiles.map((h) => h.marque))].sort((a, b) =>
+  a.localeCompare(b, "fr")
+);
+
+const familles = Object.entries(infosFamille).map(([code, info]) => ({
+  code,
+  label: info.label,
+}));
+
+// Grades ISO VG numériques uniquement (correspond à la viscosité à 40 °C) :
+// les entrées atypiques (« 10W-30 », « 46-68 », « — ») restent visibles via
+// « Toutes les viscosités » mais ne sont pas listées comme grade filtrable.
+const grades = [...new Set(huiles.map((h) => h.vg).filter((vg) => /^\d+$/.test(vg)))]
+  .map(Number)
+  .sort((a, b) => a - b);
+
+// Sommaire de la page, regroupé par thème (utilisé pour l'arborescence de
+// navigation à gauche). Chaque item pointe vers l'id de la carte correspondante.
+const sommaire = [
+  {
+    titre: "Pompe & puissance",
+    items: [
+      { id: "calc-puissance", label: "Puissance hydraulique" },
+      { id: "calc-debit", label: "Débit d'une pompe" },
+      { id: "calc-couple", label: "Couple sur l'arbre" },
+    ],
+  },
+  {
+    titre: "Vérin",
+    items: [
+      { id: "calc-force", label: "Force d'un vérin" },
+      { id: "calc-vitesse-verin", label: "Vitesse d'un vérin" },
+      { id: "calc-temps-verin", label: "Temps de course d'un vérin" },
+    ],
+  },
+  {
+    titre: "Conduites & écoulement",
+    items: [
+      { id: "calc-vitesse-conduite", label: "Vitesse du fluide en conduite" },
+      { id: "calc-reynolds", label: "Nombre de Reynolds" },
+      { id: "calc-diametre", label: "Diamètre de conduite conseillé" },
+    ],
+  },
+  {
+    titre: "Fluide hydraulique",
+    items: [{ id: "calc-viscosite", label: "Viscosité selon la température" }],
+  },
+  {
+    titre: "Stockage d'énergie",
+    items: [{ id: "calc-accu", label: "Accumulateur : volume utile" }],
+  },
+];
+---
+<Layout
+  title="Calculateurs hydrauliques — HydroDidac"
+  description="Calculateurs hydrauliques en ligne : puissance, débit de pompe, couple, force et vitesse de vérin, vitesse en conduite, nombre de Reynolds, viscosité selon la température, temps de course, diamètre de conduite, accumulateur. Formules expliquées."
+>
+  <main id="contenu" class="calc-page">
+    <div class="calc-layout">
+      <nav class="calc-sommaire" aria-label="Sommaire des calculateurs">
+        <p class="calc-sommaire-titre">Sommaire</p>
+        <ul>
+          {sommaire.map((groupe) => (
+            <li>
+              <span class="calc-sommaire-groupe">{groupe.titre}</span>
+              <ul>
+                {groupe.items.map((item) => (
+                  <li><a href={`#${item.id}`} data-cible={item.id}>{item.label}</a></li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div class="calc-contenu">
+    <h1>Calculateurs hydrauliques</h1>
+    <p class="calc-intro">
+      Des outils de calcul rapides pour dimensionner ou vérifier un circuit
+      hydraulique. Chaque calculateur affiche la formule utilisée : l'objectif
+      est autant de <strong>comprendre</strong> que de calculer. Les résultats
+      se mettent à jour automatiquement dès que vous modifiez une valeur.
+    </p>
+
+    <div class="calc-grille">
+
+      <!-- 1. Puissance hydraulique -->
+      <section class="calc-carte" id="calc-puissance">
+        <h2>Puissance hydraulique</h2>
+        <p class="calc-desc">Puissance transportée par le fluide à partir du débit et de la pression.</p>
+        <p class="calc-formule">P (kW) = Q (L/min) × p (bar) ÷ 600</p>
+        <label>Débit Q <span class="unite">L/min</span>
+          <input type="number" id="pu-q" value="60" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Pression p <span class="unite">bar</span>
+          <input type="number" id="pu-p" value="200" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Puissance</span>
+          <span class="resultat-valeur" id="pu-res">—</span>
+        </div>
+        <p class="calc-note">Puissance hydraulique « utile ». La puissance du moteur d'entraînement doit être supérieure pour compenser les rendements de la pompe.</p>
+      </section>
+
+      <!-- 2. Débit d'une pompe -->
+      <section class="calc-carte" id="calc-debit">
+        <h2>Débit d'une pompe</h2>
+        <p class="calc-desc">Débit fourni par une pompe selon sa cylindrée et sa vitesse de rotation.</p>
+        <p class="calc-formule">Q (L/min) = Cyl (cm³/tr) × N (tr/min) × η<sub>v</sub> ÷ 1000</p>
+        <label>Cylindrée <span class="unite">cm³/tr</span>
+          <input type="number" id="de-cyl" value="45" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Vitesse de rotation N <span class="unite">tr/min</span>
+          <input type="number" id="de-n" value="1500" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Rendement volumétrique η<sub>v</sub> <span class="unite">%</span>
+          <input type="number" id="de-rv" value="95" min="0" max="100" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Débit réel</span>
+          <span class="resultat-valeur" id="de-res">—</span>
+        </div>
+        <p class="calc-note">η<sub>v</sub> vaut typiquement 90 à 98 % pour une pompe en bon état. Un débit mesuré nettement inférieur au calcul est un signe d'usure interne.</p>
+      </section>
+
+      <!-- 3. Couple sur l'arbre -->
+      <section class="calc-carte" id="calc-couple">
+        <h2>Couple sur l'arbre</h2>
+        <p class="calc-desc">Couple théorique d'une pompe ou d'un moteur hydraulique.</p>
+        <p class="calc-formule">C (Nm) = Cyl (cm³/tr) × Δp (bar) ÷ 62,8</p>
+        <label>Cylindrée <span class="unite">cm³/tr</span>
+          <input type="number" id="co-cyl" value="45" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Différence de pression Δp <span class="unite">bar</span>
+          <input type="number" id="co-dp" value="200" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Couple théorique</span>
+          <span class="resultat-valeur" id="co-res">—</span>
+        </div>
+        <p class="calc-note">62,8 = 20 × π. Pour une pompe, le couple réel à fournir est plus élevé (divisez par le rendement mécanique) ; pour un moteur, le couple réel disponible est plus faible.</p>
+      </section>
+
+      <!-- 4. Force d'un vérin -->
+      <section class="calc-carte" id="calc-force">
+        <h2>Force d'un vérin</h2>
+        <p class="calc-desc">Force développée en sortie et en rentrée de tige, à partir des diamètres et de la pression.</p>
+        <p class="calc-formule">F (N) = p (bar) × S (cm²) × 10</p>
+        <label>Diamètre du piston D <span class="unite">mm</span>
+          <input type="number" id="fo-d" value="80" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Diamètre de la tige d <span class="unite">mm</span>
+          <input type="number" id="fo-t" value="45" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Pression p <span class="unite">bar</span>
+          <input type="number" id="fo-p" value="200" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Sortie de tige (côté fond)</span>
+          <span class="resultat-valeur" id="fo-res-ext">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Rentrée de tige (côté annulaire)</span>
+          <span class="resultat-valeur" id="fo-res-ret">—</span>
+        </div>
+        <p class="calc-note">S = π×D²/4 côté fond, π×(D²−d²)/4 côté tige. La force en rentrée est toujours plus faible : la tige « vole » une partie de la surface du piston.</p>
+      </section>
+
+      <!-- 5. Vitesse d'un vérin -->
+      <section class="calc-carte" id="calc-vitesse-verin">
+        <h2>Vitesse d'un vérin</h2>
+        <p class="calc-desc">Vitesse de la tige en sortie et en rentrée pour un débit donné.</p>
+        <p class="calc-formule">v (m/s) = Q (L/min) ÷ (6 × S (cm²))</p>
+        <label>Débit Q <span class="unite">L/min</span>
+          <input type="number" id="vv-q" value="60" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Diamètre du piston D <span class="unite">mm</span>
+          <input type="number" id="vv-d" value="80" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Diamètre de la tige d <span class="unite">mm</span>
+          <input type="number" id="vv-t" value="45" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Sortie de tige</span>
+          <span class="resultat-valeur" id="vv-res-ext">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Rentrée de tige</span>
+          <span class="resultat-valeur" id="vv-res-ret">—</span>
+        </div>
+        <p class="calc-note">À débit égal, la tige rentre plus vite qu'elle ne sort : la surface annulaire est plus petite, donc le même débit la remplit plus vite.</p>
+      </section>
+
+      <!-- 6. Vitesse du fluide en conduite -->
+      <section class="calc-carte" id="calc-vitesse-conduite">
+        <h2>Vitesse du fluide en conduite</h2>
+        <p class="calc-desc">Vitesse d'écoulement dans un tube ou flexible, pour vérifier le dimensionnement.</p>
+        <p class="calc-formule">v (m/s) = 21,2 × Q (L/min) ÷ d² (mm)</p>
+        <label>Débit Q <span class="unite">L/min</span>
+          <input type="number" id="vc-q" value="60" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Diamètre intérieur d <span class="unite">mm</span>
+          <input type="number" id="vc-d" value="16" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Type de ligne
+          <select id="vc-ligne">
+            <option value="aspiration">Aspiration</option>
+            <option value="retour">Retour</option>
+            <option value="pression" selected>Pression</option>
+          </select>
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Vitesse du fluide</span>
+          <span class="resultat-valeur" id="vc-res">—</span>
+        </div>
+        <p class="calc-note" id="vc-verdict"></p>
+        <table class="calc-tableau">
+          <thead><tr><th>Ligne</th><th>Vitesse conseillée</th></tr></thead>
+          <tbody>
+            <tr id="vc-row-aspiration"><td>Aspiration</td><td class="valeur">0,6 – 1,2 m/s</td></tr>
+            <tr id="vc-row-retour"><td>Retour</td><td class="valeur">2 – 4 m/s</td></tr>
+            <tr id="vc-row-pression"><td>Pression</td><td class="valeur">3 – 6 m/s</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 7. Nombre de Reynolds -->
+      <section class="calc-carte" id="calc-reynolds">
+        <h2>Nombre de Reynolds</h2>
+        <p class="calc-desc">Caractérise le régime d'écoulement : laminaire (régulier) ou turbulent (pertes de charge accrues, échauffement).</p>
+        <p class="calc-formule">Re = 1000 × v (m/s) × d (mm) ÷ ν (cSt)</p>
+        <label>Vitesse du fluide v <span class="unite">m/s</span>
+          <input type="number" id="re-v" value="5" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Diamètre intérieur d <span class="unite">mm</span>
+          <input type="number" id="re-d" value="16" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Viscosité cinématique ν <span class="unite">cSt</span>
+          <input type="number" id="re-nu" value="46" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Nombre de Reynolds</span>
+          <span class="resultat-valeur" id="re-res">—</span>
+        </div>
+        <p class="calc-note" id="re-verdict"></p>
+        <p class="calc-note">Repère : une huile HV 46 fait 46 cSt à 40 °C. En hydraulique, on cherche à rester en régime laminaire (Re &lt; 2300).</p>
+      </section>
+
+      <!-- 8. Viscosité selon la température -->
+      <section class="calc-carte calc-carte--large" id="calc-viscosite">
+        <h2>Viscosité selon la température</h2>
+        <p class="calc-desc">Viscosité réelle de l'huile sélectionnée à la température du circuit, calculée à partir de sa fiche technique (viscosité à 40 °C, à 100 °C et VI).</p>
+        <p class="calc-formule">log log(ν + 0,7) = A − B × log T (K)</p>
+        <p class="calc-filtres-titre">Filtrer le catalogue :</p>
+        <div class="calc-filtres">
+          <label>Marque
+            <select id="vi-filtre-marque" class="calc-filtre">
+              <option value="">Toutes</option>
+              {marques.map((marque) => <option value={marque}>{marque}</option>)}
+            </select>
+          </label>
+          <label>Type d'huile
+            <select id="vi-filtre-type" class="calc-filtre">
+              <option value="">Tous</option>
+              {familles.map((f) => <option value={f.code}>{f.label}</option>)}
+            </select>
+          </label>
+          <label>Viscosité à 40 °C
+            <select id="vi-filtre-vg" class="calc-filtre">
+              <option value="">Toutes</option>
+              {grades.map((g) => <option value={g}>ISO VG {g}</option>)}
+            </select>
+          </label>
+        </div>
+        <label>Huile
+          <select id="vi-huile">
+            {marques.map((marque) => (
+              <optgroup label={marque}>
+                {huiles
+                  .filter((h) => h.marque === marque)
+                  .map((h) => (
+                    <option
+                      value={`${h.n40}|${h.n100}`}
+                      data-vi={h.vi}
+                      data-fam={h.fam}
+                      selected={marque === "Fuchs" && h.nom === "Renolin B 46" ? true : undefined}
+                    >
+                      {h.nom} (VG {h.vg} · VI {h.vi})
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+        <p class="calc-note" id="vi-nb-resultats"></p>
+        <label>Température du circuit <span class="unite">°C</span>
+          <input type="number" id="vi-t" value="60" step="any" inputmode="decimal" />
+        </label>
+        <input type="hidden" id="vi-n1" />
+        <input type="hidden" id="vi-n2" />
+        <div class="calc-resultat">
+          <span class="resultat-label">Viscosité à cette température</span>
+          <span class="resultat-valeur" id="vi-res">—</span>
+        </div>
+        <p class="calc-note" id="vi-verdict"></p>
+        <p class="calc-note" id="vi-fiche"></p>
+        <div class="calc-huile-info" id="vi-info"></div>
+      </section>
+
+      <!-- 9. Temps de course d'un vérin -->
+      <section class="calc-carte" id="calc-temps-verin">
+        <h2>Temps de course d'un vérin</h2>
+        <p class="calc-desc">Durée de sortie et de rentrée de tige pour une course et un débit donnés.</p>
+        <p class="calc-formule">t (s) = V (L) × 60 ÷ Q (L/min)</p>
+        <label>Course <span class="unite">mm</span>
+          <input type="number" id="tv-c" value="500" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Diamètre du piston D <span class="unite">mm</span>
+          <input type="number" id="tv-d" value="80" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Diamètre de la tige d <span class="unite">mm</span>
+          <input type="number" id="tv-t" value="45" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Débit Q <span class="unite">L/min</span>
+          <input type="number" id="tv-q" value="60" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Temps de sortie</span>
+          <span class="resultat-valeur" id="tv-res-ext">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Temps de rentrée</span>
+          <span class="resultat-valeur" id="tv-res-ret">—</span>
+        </div>
+        <p class="calc-note" id="tv-note"></p>
+      </section>
+
+      <!-- 10. Diamètre de conduite conseillé -->
+      <section class="calc-carte" id="calc-diametre">
+        <h2>Diamètre de conduite conseillé</h2>
+        <p class="calc-desc">Diamètre intérieur minimal pour rester sous la vitesse conseillée selon le type de ligne.</p>
+        <p class="calc-formule">d (mm) = √(21,2 × Q (L/min) ÷ v<sub>max</sub> (m/s))</p>
+        <label>Débit Q <span class="unite">L/min</span>
+          <input type="number" id="di-q" value="60" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Type de ligne
+          <select id="di-ligne">
+            <option value="1.2">Aspiration (v max 1,2 m/s)</option>
+            <option value="4">Retour (v max 4 m/s)</option>
+            <option value="6" selected>Pression (v max 6 m/s)</option>
+          </select>
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Diamètre intérieur minimal</span>
+          <span class="resultat-valeur" id="di-res">—</span>
+        </div>
+        <p class="calc-note">Choisissez ensuite le tube ou flexible de dimension normalisée immédiatement <strong>supérieure</strong> : un diamètre plus grand réduit les pertes de charge et l'échauffement.</p>
+      </section>
+
+      <!-- 11. Accumulateur : volume utile -->
+      <section class="calc-carte" id="calc-accu">
+        <h2>Accumulateur : volume utile</h2>
+        <p class="calc-desc">Volume d'huile restituable par un accumulateur à vessie entre deux pressions de service (loi des gaz, pressions absolues).</p>
+        <p class="calc-formule">ΔV = V₀ × p₀ × (1/p<sub>min</sub> − 1/p<sub>max</sub>)</p>
+        <label>Volume de l'accumulateur V₀ <span class="unite">L</span>
+          <input type="number" id="ac-v0" value="10" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Pression de gonflage p₀ <span class="unite">bar</span>
+          <input type="number" id="ac-p0" value="140" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Pression de service mini p<sub>min</sub> <span class="unite">bar</span>
+          <input type="number" id="ac-pmin" value="160" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Pression de service maxi p<sub>max</sub> <span class="unite">bar</span>
+          <input type="number" id="ac-pmax" value="250" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Volume utile (cycle lent, isotherme)</span>
+          <span class="resultat-valeur" id="ac-res-iso">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Volume utile (cycle rapide, adiabatique)</span>
+          <span class="resultat-valeur" id="ac-res-adia">—</span>
+        </div>
+        <p class="calc-note" id="ac-verdict"></p>
+        <p class="calc-note">Gonflage conseillé : p₀ ≈ 0,9 × p<sub>min</sub> (à vérifier huile à température de service). Les pressions saisies sont relatives (manomètre) : le calcul ajoute 1 bar pour passer en absolu. ⚠️ Le gonflage se fait exclusivement à l'azote.</p>
+      </section>
+
+    </div>
+
+    <div class="encadre-securite">
+      ⚠️ Ces calculateurs donnent des ordres de grandeur théoriques, à titre
+      pédagogique. Pour un dimensionnement réel, tenez compte des rendements des
+      composants, des pertes de charge et des données constructeur.
+    </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .calc-page {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  .calc-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 2.2rem;
+  }
+  .calc-contenu {
+    flex: 1;
+    min-width: 0;
+  }
+  .calc-sommaire {
+    flex: 0 0 230px;
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+    font-size: var(--taille-petit);
+  }
+  .calc-sommaire-titre {
+    margin: 0 0 0.6rem;
+    font-family: var(--font-texte);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #51606b;
+  }
+  .calc-sommaire > ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .calc-sommaire-groupe {
+    display: block;
+    font-family: var(--font-texte);
+    font-weight: 700;
+    color: var(--color-anthracite);
+    margin-bottom: 0.35rem;
+  }
+  .calc-sommaire ul ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--color-gris-bordure);
+  }
+  .calc-sommaire ul ul li a {
+    display: block;
+    padding: 0.3em 0 0.3em 0.7em;
+    margin-left: -2px;
+    border-left: 2px solid transparent;
+    color: #51606b;
+    text-decoration: none;
+  }
+  .calc-sommaire ul ul li a:hover {
+    color: var(--color-bleu-hydraulique);
+  }
+  .calc-sommaire ul ul li a.actif {
+    color: var(--color-bleu-hydraulique);
+    border-left-color: var(--color-ambre);
+    font-weight: 600;
+  }
+  @media (max-width: 900px) {
+    .calc-layout {
+      flex-direction: column;
+    }
+    .calc-sommaire {
+      position: static;
+      max-height: none;
+      width: 100%;
+    }
+    .calc-sommaire > ul {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+    }
+  }
+  .calc-intro {
+    max-width: 760px;
+    color: #51606b;
+  }
+  .calc-grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 1.4rem;
+    margin: 2rem 0;
+    align-items: start;
+  }
+  .calc-carte {
+    background: var(--color-blanc);
+    border: 1px solid var(--color-gris-bordure);
+    border-top: 4px solid var(--color-ambre);
+    border-radius: 6px;
+    box-shadow: var(--ombre-carte);
+    padding: 1.4rem;
+  }
+  .calc-carte--large {
+    grid-column: 1 / -1;
+  }
+  .calc-filtres-titre {
+    margin: 0 0 0.4rem;
+    font-family: var(--font-texte);
+    font-size: var(--taille-petit);
+    font-weight: 600;
+    color: #51606b;
+  }
+  .calc-filtres {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    background: var(--color-gris-clair);
+    border-radius: 4px;
+  }
+  .calc-filtres label {
+    margin-bottom: 0;
+  }
+  .calc-carte h2 {
+    margin: 0 0 0.3rem;
+    font-size: 1.2rem;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .calc-desc {
+    margin: 0 0 0.8rem;
+    font-size: var(--taille-petit);
+    color: #51606b;
+  }
+  .calc-formule {
+    font-family: var(--font-valeurs);
+    font-size: 0.85rem;
+    background: var(--color-formule-fond);
+    border-left: 3px solid var(--color-formule-bordure);
+    border-radius: 0 4px 4px 0;
+    padding: 0.5em 0.8em;
+    margin: 0 0 1rem;
+  }
+  .calc-carte label {
+    display: block;
+    font-family: var(--font-texte);
+    font-size: var(--taille-petit);
+    font-weight: 600;
+    margin-bottom: 0.7rem;
+  }
+  .unite {
+    font-weight: 400;
+    color: #51606b;
+    font-family: var(--font-valeurs);
+    font-size: 0.8rem;
+  }
+  .calc-carte input,
+  .calc-carte select {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    padding: 0.5em 0.7em;
+    font-family: var(--font-valeurs);
+    font-size: 1rem;
+    color: var(--color-anthracite);
+    border: 1px solid var(--color-gris-bordure);
+    border-radius: 4px;
+    background: var(--color-gris-clair);
+  }
+  .calc-carte input:focus,
+  .calc-carte select:focus {
+    outline: none;
+    border-color: var(--color-bleu-hydraulique);
+    background: var(--color-blanc);
+  }
+  .calc-resultat {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--color-bleu-fonce);
+    color: var(--color-blanc);
+    border-radius: 4px;
+    padding: 0.6em 0.9em;
+    margin: 0.8rem 0 0;
+  }
+  .resultat-label {
+    font-family: var(--font-texte);
+    font-size: 0.8rem;
+    opacity: 0.85;
+  }
+  .resultat-valeur {
+    font-family: var(--font-valeurs);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-ambre);
+    white-space: nowrap;
+  }
+  .calc-note {
+    font-size: 0.8rem;
+    color: #51606b;
+    margin: 0.8rem 0 0;
+  }
+  .calc-note:empty {
+    display: none;
+  }
+  .calc-tableau {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.8rem 0 0;
+    font-size: 0.8rem;
+  }
+  .calc-tableau th {
+    background: var(--color-gris-clair);
+    color: var(--color-anthracite);
+    text-align: left;
+    padding: 0.35rem 0.6rem;
+    font-family: var(--font-texte);
+  }
+  .calc-tableau td {
+    padding: 0.35rem 0.6rem;
+    border-bottom: 1px solid var(--color-gris-bordure);
+  }
+  .calc-tableau tr.ligne-active td {
+    background: var(--color-formule-fond);
+    font-weight: 700;
+    color: var(--color-anthracite);
+  }
+  .calc-tableau tr.ligne-active td:first-child {
+    box-shadow: inset 3px 0 0 var(--color-ambre);
+  }
+  .calc-huile-info {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-gris-bordure);
+  }
+  .calc-huile-info:empty {
+    display: none;
+  }
+  .calc-huile-info h3 {
+    margin: 0 0 0.3rem;
+    font-family: var(--font-texte);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-anthracite);
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .calc-huile-info p {
+    margin: 0 0 0.9rem;
+    font-size: var(--taille-petit);
+    color: #51606b;
+  }
+  .calc-huile-avinc {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+  }
+  .calc-huile-avinc ul {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+    font-size: var(--taille-petit);
+    color: #51606b;
+  }
+  .calc-huile-avinc li {
+    position: relative;
+    padding-left: 1.3em;
+    margin-bottom: 0.4em;
+  }
+  .calc-huile-avinc li::before {
+    position: absolute;
+    left: 0;
+  }
+  .calc-huile-avantages li::before {
+    content: "✅";
+  }
+  .calc-huile-inconvenients li::before {
+    content: "⚠️";
+  }
+  .calc-huile-info .calc-huile-badge {
+    display: inline-block;
+    font-family: var(--font-valeurs);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-bleu-hydraulique);
+    background: var(--color-formule-fond);
+    border-radius: 3px;
+    padding: 0.1em 0.5em;
+    margin-right: 0.4em;
+  }
+</style>
+
+<script>
+  import { huiles, infosFamille } from "../data/huiles-hydrauliques.js";
+
+  const fmtFr = (valeur: number, decimales = 1) =>
+    new Intl.NumberFormat("fr-FR", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimales,
+    }).format(valeur);
+
+  const lire = (id: string): number => {
+    const champ = document.getElementById(id) as HTMLInputElement | null;
+    const v = champ ? parseFloat(champ.value) : NaN;
+    return Number.isFinite(v) && v >= 0 ? v : NaN;
+  };
+
+  /** Comme `lire`, mais accepte les valeurs négatives (températures). */
+  const lireLibre = (id: string): number => {
+    const champ = document.getElementById(id) as HTMLInputElement | null;
+    const v = champ ? parseFloat(champ.value) : NaN;
+    return Number.isFinite(v) ? v : NaN;
+  };
+
+  const afficher = (id: string, texte: string) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = texte;
+  };
+
+  /** Comme `afficher`, mais insère du HTML (contenu interne, non issu d'une saisie utilisateur). */
+  const afficherHTML = (id: string, html: string) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  };
+
+  const listeHTML = (items: string[]) => items.map((item) => `<li>${item}</li>`).join("");
+
+  /** Surface d'un disque en cm² à partir d'un diamètre en mm. */
+  const surfaceCm2 = (diametreMm: number) => (Math.PI * (diametreMm / 10) ** 2) / 4;
+
+  const calculer = () => {
+    // 1. Puissance hydraulique : P = Q × p / 600
+    const puQ = lire("pu-q"), puP = lire("pu-p");
+    afficher("pu-res", puQ >= 0 && puP >= 0 ? `${fmtFr((puQ * puP) / 600, 2)} kW` : "—");
+
+    // 2. Débit de pompe : Q = Cyl × N × ηv / 1000
+    const deCyl = lire("de-cyl"), deN = lire("de-n"), deRv = lire("de-rv");
+    afficher(
+      "de-res",
+      deCyl >= 0 && deN >= 0 && deRv >= 0
+        ? `${fmtFr((deCyl * deN * (deRv / 100)) / 1000, 1)} L/min`
+        : "—"
+    );
+
+    // 3. Couple : C = Cyl × Δp / (20π)
+    const coCyl = lire("co-cyl"), coDp = lire("co-dp");
+    afficher(
+      "co-res",
+      coCyl >= 0 && coDp >= 0 ? `${fmtFr((coCyl * coDp) / (20 * Math.PI), 1)} Nm` : "—"
+    );
+
+    // 4. Force de vérin : F(N) = p × S(cm²) × 10 — affichée en daN / kN
+    const foD = lire("fo-d"), foT = lire("fo-t"), foP = lire("fo-p");
+    if (foD >= 0 && foT >= 0 && foP >= 0 && foT < foD) {
+      const sFond = surfaceCm2(foD);
+      const sAnnulaire = sFond - surfaceCm2(foT);
+      const fExt = foP * sFond * 10;
+      const fRet = foP * sAnnulaire * 10;
+      const enKn = (f: number) =>
+        f >= 10000 ? `${fmtFr(f / 1000, 1)} kN` : `${fmtFr(f / 10, 0)} daN`;
+      afficher("fo-res-ext", enKn(fExt));
+      afficher("fo-res-ret", enKn(fRet));
+    } else {
+      afficher("fo-res-ext", "—");
+      afficher("fo-res-ret", "—");
+    }
+
+    // 5. Vitesse de vérin : v = Q / (6 × S)
+    const vvQ = lire("vv-q"), vvD = lire("vv-d"), vvT = lire("vv-t");
+    if (vvQ >= 0 && vvD > 0 && vvT >= 0 && vvT < vvD) {
+      const sFond = surfaceCm2(vvD);
+      const sAnnulaire = sFond - surfaceCm2(vvT);
+      afficher("vv-res-ext", `${fmtFr(vvQ / (6 * sFond), 3)} m/s`);
+      afficher("vv-res-ret", `${fmtFr(vvQ / (6 * sAnnulaire), 3)} m/s`);
+    } else {
+      afficher("vv-res-ext", "—");
+      afficher("vv-res-ret", "—");
+    }
+
+    // 6. Vitesse en conduite : v = Q/60000 ÷ (π(d/1000)²/4)
+    const vcQ = lire("vc-q"), vcD = lire("vc-d");
+    const vcLigneEl = document.getElementById("vc-ligne") as HTMLSelectElement | null;
+    const vcLigne = vcLigneEl ? vcLigneEl.value : "pression";
+    const plagesConduite: Record<string, { min: number; max: number; nom: string }> = {
+      aspiration: { min: 0.6, max: 1.2, nom: "aspiration" },
+      retour: { min: 2, max: 4, nom: "retour" },
+      pression: { min: 3, max: 6, nom: "pression" },
+    };
+    // Surligne la ligne du tableau correspondant au type sélectionné.
+    ["aspiration", "retour", "pression"].forEach((l) => {
+      document.getElementById(`vc-row-${l}`)?.classList.toggle("ligne-active", l === vcLigne);
+    });
+    if (vcQ >= 0 && vcD > 0) {
+      const vConduite = (vcQ / 60000) / ((Math.PI * (vcD / 1000) ** 2) / 4);
+      afficher("vc-res", `${fmtFr(vConduite, 2)} m/s`);
+      const p = plagesConduite[vcLigne] ?? plagesConduite.pression;
+      const plage = `${fmtFr(p.min, 1)}–${fmtFr(p.max, 1)} m/s`;
+      let verdict = "";
+      if (vConduite < p.min) {
+        verdict = `🟡 Ligne de ${p.nom} : vitesse sous la plage conseillée (${plage}). Conduite surdimensionnée — sans risque, mais plus encombrante et coûteuse que nécessaire.`;
+      } else if (vConduite <= p.max) {
+        verdict = `✅ Ligne de ${p.nom} : vitesse dans la plage conseillée (${plage}).`;
+      } else if (vcLigne === "aspiration") {
+        verdict = `⚠️ Ligne d'aspiration : au-dessus de ${fmtFr(p.max, 1)} m/s. Risque de cavitation de la pompe — augmentez le diamètre.`;
+      } else {
+        verdict = `⚠️ Ligne de ${p.nom} : au-dessus de ${fmtFr(p.max, 1)} m/s. Pertes de charge et échauffement accrus — augmentez le diamètre.`;
+      }
+      afficher("vc-verdict", verdict);
+    } else {
+      afficher("vc-res", "—");
+      afficher("vc-verdict", "");
+    }
+
+    // 7. Reynolds : Re = 1000 × v × d / ν
+    const reV = lire("re-v"), reD = lire("re-d"), reNu = lire("re-nu");
+    if (reV >= 0 && reD >= 0 && reNu > 0) {
+      const re = (1000 * reV * reD) / reNu;
+      afficher("re-res", fmtFr(re, 0));
+      let verdict = "";
+      if (re < 2300) verdict = "✅ Régime laminaire : écoulement régulier, c'est l'objectif en hydraulique.";
+      else if (re <= 3000) verdict = "🟠 Régime transitoire : instable, à éviter si possible.";
+      else verdict = "⚠️ Régime turbulent : pertes de charge et échauffement accrus.";
+      afficher("re-verdict", verdict);
+    } else {
+      afficher("re-res", "—");
+      afficher("re-verdict", "");
+    }
+
+    // 8. Viscosité–température (équation de Walther / ASTM D341)
+    // W(ν) = log10(log10(ν + 0,7)) est linéaire en log10(T en kelvins). Avec les
+    // deux points de la fiche technique (40 °C et 100 °C), la pente réelle de
+    // l'huile (donc son VI réel) est utilisée : le calcul est exact.
+    const viHuileSelect = document.getElementById("vi-huile") as HTMLSelectElement | null;
+    const viHuileValide = !!viHuileSelect?.selectedOptions[0] && !viHuileSelect.selectedOptions[0].disabled;
+    const viN1 = lire("vi-n1"), viN2 = lire("vi-n2");
+    const viT = lireLibre("vi-t");
+    const t40 = Math.log10(40 + 273.15), t100 = Math.log10(100 + 273.15);
+    const w = (nu: number) => Math.log10(Math.log10(nu + 0.7));
+    if (viHuileValide && viN1 > 2 && viN2 > 0.5 && viN1 > viN2 && Number.isFinite(viT) && viT > -30) {
+      const pente = (w(viN1) - w(viN2)) / (t100 - t40);
+      const lt = Math.log10(viT + 273.15);
+      const nu = 10 ** 10 ** (w(viN1) - pente * (lt - t40)) - 0.7;
+      afficher("vi-res", `${fmtFr(nu, nu < 100 ? 1 : 0)} cSt`);
+      let verdict = "";
+      if (nu < 10) verdict = "⚠️ Viscosité trop faible : film d'huile insuffisant, usure et fuites internes accrues. L'huile est trop chaude ou trop fluide.";
+      else if (nu < 16) verdict = "🟠 Limite basse : acceptable ponctuellement, surveillez la température.";
+      else if (nu <= 36) verdict = "✅ Plage optimale de fonctionnement pour la plupart des pompes (16 – 36 cSt).";
+      else if (nu <= 1000) verdict = "🟠 Au-dessus de la plage optimale : normal en dessous de la température de service. Rendement un peu réduit ; à froid, montez en charge progressivement.";
+      else verdict = "⚠️ Trop visqueuse pour pomper : risque de cavitation à l'aspiration. Préchauffez l'huile.";
+      afficher("vi-verdict", verdict);
+    } else {
+      afficher("vi-res", "—");
+      afficher("vi-verdict", "");
+    }
+
+    // 9. Temps de course : t = V × 60 / Q, avec V = S(cm²) × course(cm) / 1000
+    const tvC = lire("tv-c"), tvD = lire("tv-d"), tvT = lire("tv-t"), tvQ = lire("tv-q");
+    if (tvC >= 0 && tvD > 0 && tvT >= 0 && tvT < tvD && tvQ > 0) {
+      const sFond = surfaceCm2(tvD);
+      const sAnnulaire = sFond - surfaceCm2(tvT);
+      const vFond = (sFond * (tvC / 10)) / 1000;
+      const vAnnulaire = (sAnnulaire * (tvC / 10)) / 1000;
+      afficher("tv-res-ext", `${fmtFr((vFond * 60) / tvQ, 1)} s`);
+      afficher("tv-res-ret", `${fmtFr((vAnnulaire * 60) / tvQ, 1)} s`);
+      afficher("tv-note", `Volume à remplir : ${fmtFr(vFond, 2)} L côté fond · ${fmtFr(vAnnulaire, 2)} L côté annulaire.`);
+    } else {
+      afficher("tv-res-ext", "—");
+      afficher("tv-res-ret", "—");
+      afficher("tv-note", "");
+    }
+
+    // 10. Diamètre de conduite : d = √(21,2 × Q / vmax)
+    const diQ = lire("di-q");
+    const diLigne = document.getElementById("di-ligne") as HTMLSelectElement | null;
+    const diVmax = diLigne ? parseFloat(diLigne.value) : NaN;
+    afficher(
+      "di-res",
+      diQ >= 0 && diVmax > 0 ? `${fmtFr(Math.sqrt((21.2 * diQ) / diVmax), 1)} mm` : "—"
+    );
+
+    // 11. Accumulateur : ΔV entre pmin et pmax (pressions absolues = relatives + 1)
+    const acV0 = lire("ac-v0"), acP0 = lire("ac-p0");
+    const acPmin = lire("ac-pmin"), acPmax = lire("ac-pmax");
+    if (acV0 > 0 && acP0 >= 0 && acPmin >= 0 && acPmax >= 0) {
+      const p0a = acP0 + 1, pMinA = acPmin + 1, pMaxA = acPmax + 1;
+      if (p0a < pMinA && pMinA < pMaxA) {
+        const dvIso = acV0 * p0a * (1 / pMinA - 1 / pMaxA);
+        const dvAdia = acV0 * ((p0a / pMinA) ** (1 / 1.4) - (p0a / pMaxA) ** (1 / 1.4));
+        afficher("ac-res-iso", `${fmtFr(dvIso, 2)} L`);
+        afficher("ac-res-adia", `${fmtFr(dvAdia, 2)} L`);
+        afficher("ac-verdict", "");
+      } else {
+        afficher("ac-res-iso", "—");
+        afficher("ac-res-adia", "—");
+        afficher("ac-verdict", "⚠️ Il faut respecter p₀ < p mini < p maxi.");
+      }
+    } else {
+      afficher("ac-res-iso", "—");
+      afficher("ac-res-adia", "—");
+      afficher("ac-verdict", "");
+    }
+  };
+
+  // Sélecteur d'huile du calculateur de viscosité : remplit automatiquement
+  // les deux champs de viscosité (40 °C / 100 °C), affiche le VI, la famille,
+  // et une fiche d'information par famille (domaine, avantages, points de
+  // vigilance, compatibilité joints) — pertinente pour définir un système.
+  const majHuile = () => {
+    const select = document.getElementById("vi-huile") as HTMLSelectElement | null;
+    const champN1 = document.getElementById("vi-n1") as HTMLInputElement | null;
+    const champN2 = document.getElementById("vi-n2") as HTMLInputElement | null;
+    const option = select?.selectedOptions[0];
+    if (!select || !champN1 || !champN2 || !option || option.disabled) {
+      afficher("vi-fiche", "");
+      afficher("vi-res", "—");
+      afficher("vi-verdict", "");
+      afficherHTML("vi-info", "");
+      return;
+    }
+    const [n40, n100] = select.value.split("|").map(Number);
+    champN1.value = String(n40);
+    champN2.value = String(n100);
+    const vi = option.dataset.vi;
+    const fam = option.dataset.fam ?? "";
+    const info = infosFamille[fam as keyof typeof infosFamille];
+    afficher(
+      "vi-fiche",
+      `Fiche technique : ${fmtFr(n40, 1)} cSt à 40 °C · ${fmtFr(n100, 2)} cSt à 100 °C · VI ${vi} — ${info?.label ?? fam}.`
+    );
+    if (info) {
+      afficherHTML(
+        "vi-info",
+        `
+        <p><span class="calc-huile-badge">Domaine d'application</span>${info.domaine}</p>
+        <div class="calc-huile-avinc">
+          <div>
+            <h3>Avantages</h3>
+            <ul class="calc-huile-avantages">${listeHTML(info.avantages)}</ul>
+          </div>
+          <div>
+            <h3>Points de vigilance</h3>
+            <ul class="calc-huile-inconvenients">${listeHTML(info.inconvenients)}</ul>
+          </div>
+        </div>
+        <p><span class="calc-huile-badge">Joints</span>${info.joints}</p>
+        <p><span class="calc-huile-badge">À retenir</span>${info.autre}</p>
+        `
+      );
+    } else {
+      afficherHTML("vi-info", "");
+    }
+  };
+
+  // Reconstruit la liste déroulante « Huile » à partir des trois filtres
+  // (marque, type, viscosité à 40 °C), en conservant la sélection en cours
+  // si elle correspond toujours aux filtres actifs.
+  const construireOptionsHuiles = () => {
+    const select = document.getElementById("vi-huile") as HTMLSelectElement | null;
+    if (!select) return;
+    const valeurAvant = select.value;
+    const fMarque = (document.getElementById("vi-filtre-marque") as HTMLSelectElement | null)?.value ?? "";
+    const fType = (document.getElementById("vi-filtre-type") as HTMLSelectElement | null)?.value ?? "";
+    const fVg = (document.getElementById("vi-filtre-vg") as HTMLSelectElement | null)?.value ?? "";
+
+    const filtrees = huiles.filter(
+      (h) =>
+        (!fMarque || h.marque === fMarque) &&
+        (!fType || h.fam === fType) &&
+        (!fVg || h.vg === fVg)
+    );
+
+    afficher(
+      "vi-nb-resultats",
+      filtrees.length === huiles.length
+        ? ""
+        : `${filtrees.length} huile${filtrees.length > 1 ? "s" : ""} correspondant aux filtres.`
+    );
+
+    select.innerHTML = "";
+    if (filtrees.length === 0) {
+      const opt = document.createElement("option");
+      opt.textContent = "Aucune huile ne correspond à ces filtres";
+      opt.disabled = true;
+      opt.selected = true;
+      select.appendChild(opt);
+      return;
+    }
+
+    const marquesFiltrees = [...new Set(filtrees.map((h) => h.marque))];
+    marquesFiltrees.forEach((marque) => {
+      const groupe = document.createElement("optgroup");
+      groupe.label = marque;
+      filtrees
+        .filter((h) => h.marque === marque)
+        .forEach((h) => {
+          const opt = document.createElement("option");
+          opt.value = `${h.n40}|${h.n100}`;
+          opt.dataset.vi = String(h.vi);
+          opt.dataset.fam = h.fam;
+          opt.textContent = `${h.nom} (VG ${h.vg} · VI ${h.vi})`;
+          groupe.appendChild(opt);
+        });
+      select.appendChild(groupe);
+    });
+
+    const optionConservee = Array.from(select.options).find((o) => o.value === valeurAvant);
+    select.value = optionConservee ? valeurAvant : select.options[0].value;
+  };
+
+  document.querySelectorAll(".calc-filtre").forEach((champ) => {
+    champ.addEventListener("change", () => {
+      construireOptionsHuiles();
+      majHuile();
+      calculer();
+    });
+  });
+
+  document.getElementById("vi-huile")?.addEventListener("change", () => {
+    majHuile();
+    calculer();
+  });
+
+  document.querySelectorAll(".calc-carte input, .calc-carte select:not(.calc-filtre)").forEach((champ) => {
+    champ.addEventListener("input", calculer);
+    champ.addEventListener("change", calculer);
+  });
+  majHuile();
+  calculer();
+
+  // Sommaire : met en surbrillance le calculateur actuellement visible à l'écran.
+  const observateur = new IntersectionObserver(
+    (entrees) => {
+      entrees.forEach((entree) => {
+        const lien = document.querySelector(`.calc-sommaire a[data-cible="${entree.target.id}"]`);
+        lien?.classList.toggle("actif", entree.isIntersecting);
+      });
+    },
+    { rootMargin: "-25% 0px -65% 0px" }
+  );
+  document.querySelectorAll(".calc-carte[id]").forEach((carte) => observateur.observe(carte));
+</script>

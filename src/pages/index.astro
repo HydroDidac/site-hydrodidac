@@ -10,57 +10,56 @@ const groupesRecents = (await getGroupesFiches())
   .slice(0, 3);
 ---
 <Layout title="HydroDidac — Hydraulique industrielle expliquée simplement">
-  <div class="page-avec-sommaire">
-    <Sommaire />
-    <main id="contenu">
-      <section style="text-align: center; padding: 1rem 0 1rem;">
-        <h1>HydroDidac</h1>
-        <p style="font-size: 1.1rem; color: #51606b; max-width: 560px; margin: 0 auto;">
-          Des fiches didactiques claires sur l'hydraulique industrielle, écrites
-          par un expert métier — pour les débutants comme pour les techniciens confirmés.
-        </p>
-        <p style="margin-top: 1.5rem;">
-          <a href="/fiches" class="bouton-imprimer" style="font-size: 1rem; padding: 0.6em 1.4em;">
-            Voir toutes les fiches →
-          </a>
-        </p>
-      </section>
+  <section class="hero no-print">
+    <h1>HydroDidac</h1>
+    <p>
+      Des fiches didactiques claires sur l'hydraulique industrielle, écrites
+      par un expert métier — pour les débutants comme pour les techniciens confirmés.
+    </p>
+    <a class="btn" href="/fiches">Voir toutes les fiches</a>
+    <a class="btn secondaire" href="/a-propos">Découvrir le projet</a>
+  </section>
 
-      <section style="margin-top: 2.5rem;">
-        <h2>Comprendre vite, comprendre juste</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
-          <div class="carte-fiche">
-            <span class="pastille-niveau debutant">🟢 Débutant</span>
-            <h3>Niveau débutant</h3>
-            <p>Zéro jargon, analogies du quotidien, glossaire des mots à connaître.</p>
-          </div>
-          <div class="carte-fiche">
-            <span class="pastille-niveau intermediaire">🟠 Intermédiaire</span>
-            <h3>Niveau intermédiaire</h3>
-            <p>Pour les techniciens qui veulent approfondir sans se perdre.</p>
-          </div>
-          <div class="carte-fiche">
-            <span class="pastille-niveau avance">🔴 Expert</span>
-            <h3>Niveau expert</h3>
-            <p>Formules, normes ISO, cas concrets pour les spécialistes.</p>
-          </div>
+  <main id="contenu" style="max-width: 1000px; margin: 0 auto; padding: 1.5rem 5% 3rem;">
+    <section>
+      <h2>Comprendre vite, comprendre juste</h2>
+      <div class="cartes">
+        <div class="carte-fiche">
+          <span class="pastille-niveau debutant">🟢 Débutant</span>
+          <h3>Niveau débutant</h3>
+          <p>Zéro jargon, analogies du quotidien, glossaire des mots à connaître.</p>
         </div>
-      </section>
+        <div class="carte-fiche">
+          <span class="pastille-niveau intermediaire">🟠 Intermédiaire</span>
+          <h3>Niveau intermédiaire</h3>
+          <p>Pour les techniciens qui veulent approfondir sans se perdre.</p>
+        </div>
+        <div class="carte-fiche">
+          <span class="pastille-niveau avance">🔴 Expert</span>
+          <h3>Niveau expert</h3>
+          <p>Formules, normes ISO, cas concrets pour les spécialistes.</p>
+        </div>
+      </div>
+    </section>
 
-      {groupesRecents.length > 0 && (
-        <section style="margin-top: 2.5rem;">
-          <h2>Dernières fiches publiées</h2>
-          {groupesRecents.map((groupe) => (
-            <a class="carte-fiche" href={`/fiches/${groupe.slug}`}>
-              <span class="pastille-niveau debutant">
-                {groupe.versions.map((v) => niveauLabel[v.data.niveau]).join(" ")}
-              </span>
-              <h3>{groupe.titre}</h3>
-              <p>{groupe.resume}</p>
-            </a>
-          ))}
-        </section>
-      )}
-    </main>
-  </div>
+    <section>
+      <h2>Les modules du programme</h2>
+      <Sommaire />
+    </section>
+
+    {groupesRecents.length > 0 && (
+      <section>
+        <h2>Dernières fiches publiées</h2>
+        {groupesRecents.map((groupe) => (
+          <a class="carte-fiche" href={`/fiches/${groupe.slug}`}>
+            <span class="pastille-niveau debutant">
+              {groupe.versions.map((v) => niveauLabel[v.data.niveau]).join(" ")}
+            </span>
+            <h3>{groupe.titre}</h3>
+            <p>{groupe.resume}</p>
+          </a>
+        ))}
+      </section>
+    )}
+  </main>
 </Layout>

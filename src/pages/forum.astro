@@ -1,0 +1,80 @@
+---
+import Layout from "../components/Layout.astro";
+import { categoriesForum } from "../data/forum-categories.js";
+---
+<Layout
+  title="Forum — HydroDidac"
+  description="Forum HydroDidac : posez vos questions sur l'hydraulique industrielle, partagez votre expérience terrain et répondez aux autres. Composants, fluides, dépannage, dimensionnement, sécurité."
+>
+  <main id="contenu" class="forum-page">
+    <h1>Forum</h1>
+    <p class="forum-intro">
+      Un espace pour échanger sur l'hydraulique industrielle : posez une
+      question, partagez un retour d'expérience terrain, ou répondez à
+      quelqu'un d'autre. Tout le monde peut lire les échanges ; pour écrire,
+      un compte GitHub gratuit est nécessaire.
+    </p>
+    <p class="forum-intro">
+      <strong>Choisissez la catégorie</strong> qui correspond à votre sujet —
+      chacune a son propre fil de discussion.
+    </p>
+
+    <div class="forum-categories">
+      {categoriesForum.map((cat) => (
+        <a class="carte-fiche forum-carte" href={`/forum/${cat.slug}`}>
+          <span class="forum-carte-icone" aria-hidden="true">{cat.icone}</span>
+          <h2>{cat.titre}</h2>
+          <p>{cat.resume}</p>
+        </a>
+      ))}
+    </div>
+
+    <div class="encadre-formules">
+      <h2>Avant de poster</h2>
+      <ul>
+        <li>Restez courtois, même en cas de désaccord technique.</li>
+        <li>Un problème rencontré sur le terrain ? Décrivez le contexte (type de circuit, pression, symptôme observé) pour que les autres puissent vous aider efficacement.</li>
+        <li>Pas de compte GitHub ? <a href="https://github.com/signup" target="_blank" rel="noopener">Créez-en un gratuitement</a> — ça prend une minute et sert uniquement à limiter le spam.</li>
+      </ul>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .forum-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  .forum-intro {
+    max-width: 700px;
+    color: #51606b;
+  }
+  .forum-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.2rem;
+    margin: 2rem 0;
+  }
+  .forum-carte {
+    margin-bottom: 0;
+  }
+  .forum-carte-icone {
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+  .forum-page .forum-carte h2 {
+    font-size: 1.1rem;
+    margin: 0.4rem 0 0.3rem;
+    border-bottom: none;
+    padding-bottom: 0;
+    color: var(--color-anthracite);
+  }
+  .encadre-formules ul {
+    margin: 0.4rem 0 0;
+    padding-left: 1.2rem;
+  }
+  .encadre-formules li {
+    margin-bottom: 0.4rem;
+  }
+</style>

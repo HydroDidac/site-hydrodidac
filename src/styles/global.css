@@ -3,6 +3,7 @@
 :root {
   /* Couleurs de marque */
   --color-bleu-hydraulique: #0e5aa7;
+  --color-bleu-fonce: #0a3f73;
   --color-ambre: #f39200;
   --color-anthracite: #1c2b36;
   --color-blanc: #ffffff;
@@ -54,11 +55,11 @@
 
 body {
   margin: 0;
-  font-family: var(--font-texte);
+  font-family: Georgia, "Times New Roman", serif;
   font-size: var(--taille-texte);
   color: var(--color-anthracite);
-  background: var(--color-blanc);
-  line-height: 1.6;
+  background: var(--color-gris-clair);
+  line-height: 1.7;
 }
 
 /* Lien d'évitement : invisible jusqu'à ce qu'un utilisateur clavier
@@ -97,14 +98,25 @@ h1, h2, h3, [id] {
 
 h1, h2, h3 {
   font-family: var(--font-titres);
-  color: var(--color-anthracite);
+  color: var(--color-bleu-fonce);
   line-height: 1.2;
   text-wrap: balance;
 }
 
 h1 { font-size: clamp(1.7rem, 4vw + 0.5rem, var(--taille-h1)); }
 h2 { font-size: var(--taille-h2); }
-h3 { font-size: var(--taille-h3); }
+h3 { font-size: var(--taille-h3); color: var(--color-bleu-hydraulique); }
+
+/* Titres de section soulignés, comme les guides du site */
+main h2 {
+  border-bottom: 2px solid var(--color-gris-bordure);
+  padding-bottom: 0.3rem;
+}
+main .encadre-formules h2,
+main .encadre-securite h2 {
+  border-bottom: none;
+  padding-bottom: 0;
+}
 
 a {
   color: var(--color-bleu-hydraulique);
@@ -143,18 +155,30 @@ code, pre, .valeur {
   background: color-mix(in srgb, var(--color-niveau-avance) 12%, white);
 }
 
+/* Grille de cartes (page d'accueil) */
+.cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.4rem;
+  margin: 2rem 0;
+}
+
 /* Carte de fiche (liste des fiches) */
 .carte-fiche {
   display: block;
-  padding: var(--espace-3);
+  background: var(--color-blanc);
+  padding: 1.4rem;
   border: 1px solid var(--color-gris-bordure);
-  border-radius: var(--rayon-carte);
+  border-top: 4px solid var(--color-ambre);
+  border-radius: 6px;
   box-shadow: var(--ombre-carte);
   margin-bottom: var(--espace-2);
   transition: border-color 0.15s ease;
 }
 .carte-fiche:hover {
   border-color: var(--color-bleu-hydraulique);
+  border-top-color: var(--color-ambre);
+  text-decoration: none;
 }
 .carte-fiche h3 {
   margin: var(--espace-1) 0 var(--espace-1) 0;
@@ -164,11 +188,35 @@ code, pre, .valeur {
   color: #51606b;
 }
 
+/* Tableaux du contenu */
+main table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2rem 0 2rem;
+  background: var(--color-blanc);
+  font-size: 0.95rem;
+}
+main th {
+  background: var(--color-anthracite);
+  color: var(--color-blanc);
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  font-family: var(--font-texte);
+}
+main td {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--color-gris-bordure);
+  vertical-align: top;
+}
+main tr:nth-child(even) td {
+  background: var(--color-gris-clair);
+}
+
 /* Encadré formules clés */
 .encadre-formules {
   background: var(--color-formule-fond);
   border-left: 4px solid var(--color-formule-bordure);
-  border-radius: var(--rayon-carte);
+  border-radius: 0 6px 6px 0;
   padding: var(--espace-2) var(--espace-3);
   margin: var(--espace-3) 0;
 }
@@ -255,7 +303,7 @@ code, pre, .valeur {
   display: flex;
   align-items: center;
   gap: var(--espace-3);
-  background: linear-gradient(120deg, var(--color-bleu-hydraulique), #0a3f73);
+  background: linear-gradient(120deg, var(--color-bleu-hydraulique), var(--color-bleu-fonce));
   color: white;
   border-radius: var(--rayon-carte);
   padding: var(--espace-3);
@@ -297,7 +345,7 @@ code, pre, .valeur {
   font-family: var(--font-texte);
   font-weight: 600;
   font-size: var(--taille-petit);
-  background: var(--color-gris-clair);
+  background: var(--color-blanc);
   border: 1px solid var(--color-gris-bordure);
   border-radius: 999px;
   padding: 0.45em 1em;
@@ -330,99 +378,139 @@ code, pre, .valeur {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* En-tête du site — collant, avec léger flou du contenu qui défile dessous
-   (même effet que les documentations Stripe/Astro/MDN) */
+/* En-tête du site — bandeau sombre collant */
 .site-header-bande {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: color-mix(in srgb, var(--color-blanc) 88%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--color-gris-bordure);
+  background: var(--color-anthracite);
 }
 .site-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: var(--espace-2) var(--espace-2);
+  flex-wrap: wrap;
+  padding: 0.8rem 5%;
 }
 .site-header nav {
   display: flex;
-  gap: var(--espace-2);
+  flex-wrap: wrap;
+  gap: 1.4rem;
 }
 .site-header-brand {
   display: flex;
   align-items: center;
   gap: var(--espace-1);
   font-family: var(--font-titres);
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: var(--color-anthracite);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.5px;
+  color: var(--color-blanc);
+}
+.site-header-brand:hover {
+  text-decoration: none;
+}
+.site-header-brand img {
+  border-radius: 6px;
+}
+.site-header-brand .brand-accent {
+  color: var(--color-ambre);
 }
 .site-header nav a {
   font-family: var(--font-texte);
-  font-size: var(--taille-petit);
+  font-size: 0.95rem;
   font-weight: 600;
-  color: var(--color-bleu-hydraulique);
+  color: var(--color-blanc);
+  padding-bottom: 3px;
+}
+.site-header nav a:hover,
+.site-header nav a.actif {
+  text-decoration: none;
+  border-bottom: 2px solid var(--color-ambre);
 }
 
-/* Pied de page */
+/* Bandeau héros (page d'accueil) */
+.hero {
+  background: linear-gradient(120deg, var(--color-bleu-hydraulique), var(--color-bleu-fonce));
+  color: var(--color-blanc);
+  text-align: center;
+  padding: 4.5rem 8% 4rem;
+}
+.hero h1 {
+  color: var(--color-blanc);
+  font-size: 2.4rem;
+  margin: 0 0 1rem;
+}
+.hero p {
+  max-width: 720px;
+  margin: 0 auto 2rem;
+  font-size: 1.1rem;
+  opacity: 0.92;
+}
+.btn {
+  display: inline-block;
+  font-family: var(--font-texte);
+  background: var(--color-ambre);
+  color: var(--color-blanc);
+  padding: 0.75rem 1.6rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  margin: 0.3rem;
+}
+.btn:hover {
+  background: color-mix(in srgb, var(--color-ambre) 85%, black);
+  text-decoration: none;
+}
+.btn.secondaire {
+  background: transparent;
+  border: 1.5px solid var(--color-blanc);
+}
+.btn.secondaire:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+@media (max-width: 640px) {
+  .hero h1 { font-size: 1.7rem; }
+}
+
+/* Pied de page — bandeau sombre centré */
 .site-footer {
-  max-width: 760px;
-  margin: var(--espace-6) auto 0;
-  padding: var(--espace-3) var(--espace-2);
-  border-top: 1px solid var(--color-gris-bordure);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--espace-2);
-  color: #51606b;
-  font-size: var(--taille-petit);
+  background: var(--color-anthracite);
+  color: var(--color-gris-clair);
+  text-align: center;
+  padding: 2rem 5%;
+  margin-top: 3rem;
+  font-family: var(--font-texte);
+  font-size: 0.9rem;
+}
+.site-footer p {
+  margin: 0 0 0.5rem;
 }
 .site-footer nav {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--espace-2);
 }
 .site-footer nav a {
-  color: #51606b;
-}
-.site-footer nav a:hover {
-  color: var(--color-bleu-hydraulique);
+  color: var(--color-ambre);
 }
 
 /* Sommaire (page d'accueil) */
-.page-avec-sommaire {
-  display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  gap: var(--espace-4);
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-  align-items: start;
-}
 .sommaire {
-  position: sticky;
-  top: var(--espace-2);
   border: 1px solid var(--color-gris-bordure);
-  border-radius: var(--rayon-carte);
-  padding: var(--espace-2);
-  background: var(--color-gris-clair);
-}
-.sommaire-titre {
-  font-size: 1rem;
-  margin: 0 0 var(--espace-2) 0;
+  border-radius: 6px;
+  padding: var(--espace-2) var(--espace-3);
+  background: var(--color-blanc);
+  margin: 2rem 0;
 }
 .sommaire-liste {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.2rem 1.5rem;
 }
 .sommaire-liste a {
   display: flex;
@@ -435,8 +523,9 @@ code, pre, .valeur {
   text-decoration: none;
 }
 .sommaire-liste a:hover {
-  background: white;
+  background: var(--color-gris-clair);
   color: var(--color-bleu-hydraulique);
+  text-decoration: none;
 }
 .sommaire-numero {
   font-family: var(--font-valeurs);
@@ -455,20 +544,11 @@ code, pre, .valeur {
   opacity: 0.55;
 }
 
-@media (max-width: 760px) {
-  .page-avec-sommaire {
-    grid-template-columns: 1fr;
-  }
-  .sommaire {
-    position: static;
-  }
-}
-
 /* Encadré sécurité */
 .encadre-securite {
   background: var(--color-securite-fond);
   border-left: 4px solid var(--color-securite-bordure);
-  border-radius: var(--rayon-carte);
+  border-radius: 0 6px 6px 0;
   padding: var(--espace-2) var(--espace-3);
   margin: var(--espace-3) 0;
   font-weight: 600;
@@ -494,7 +574,7 @@ code, pre, .valeur {
   margin-left: auto;
   font-family: var(--font-texte);
   font-size: var(--taille-petit);
-  background: var(--color-gris-clair);
+  background: var(--color-blanc);
   border: 1px solid var(--color-gris-bordure);
   border-radius: var(--rayon-carte);
   padding: 0.4em 0.8em;
@@ -524,8 +604,9 @@ code, pre, .valeur {
   object-fit: cover;
 }
 .figure-schema {
-  background: var(--color-gris-clair);
-  border-radius: var(--rayon-carte);
+  background: var(--color-blanc);
+  border: 1px solid var(--color-gris-bordure);
+  border-radius: 6px;
   padding: var(--espace-2);
 }
 figcaption {

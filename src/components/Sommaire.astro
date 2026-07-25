@@ -9,7 +9,6 @@ for (const groupe of groupes) {
 }
 ---
 <nav class="sommaire no-print" aria-label="Sommaire des fiches techniques">
-  <h2 class="sommaire-titre">Sommaire</h2>
   <ol class="sommaire-liste">
     {MODULES.map((module) => {
       const nb = compteParModule.get(module.nom) ?? 0;

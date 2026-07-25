@@ -1,14 +1,20 @@
 ---
+const chemin = Astro.url.pathname;
+const actif = (prefixe: string) =>
+  (prefixe === "/" ? chemin === "/" : chemin.startsWith(prefixe)) ? "actif" : undefined;
 ---
 <div class="site-header-bande no-print">
   <header class="site-header">
     <a href="/" class="site-header-brand">
       <img src="/logo.svg" alt="" width="36" height="36" />
-      <span>HydroDidac</span>
+      <span>Hydro<span class="brand-accent">Didac</span></span>
     </a>
     <nav>
-      <a href="/fiches">Fiches</a>
-      <a href="/a-propos">À propos</a>
+      <a href="/" class={actif("/")}>Accueil</a>
+      <a href="/fiches" class={actif("/fiches")}>Fiches</a>
+      <a href="/calculateurs" class={actif("/calculateurs")}>Calculateurs</a>
+      <a href="/forum" class={actif("/forum")}>Forum</a>
+      <a href="/a-propos" class={actif("/a-propos")}>À propos</a>
     </nav>
   </header>
 </div>

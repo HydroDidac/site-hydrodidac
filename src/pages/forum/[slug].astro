@@ -1,0 +1,92 @@
+---
+import Layout from "../../components/Layout.astro";
+import ForumDiscussion from "../../components/ForumDiscussion.astro";
+import { categoriesForum } from "../../data/forum-categories.js";
+
+export function getStaticPaths() {
+  return categoriesForum.map((categorie) => ({
+    params: { slug: categorie.slug },
+    props: { categorie },
+  }));
+}
+
+const { categorie } = Astro.props;
+const autres = categoriesForum.filter((c) => c.slug !== categorie.slug);
+---
+<Layout
+  title={`${categorie.titre} — Forum HydroDidac`}
+  description={categorie.resume}
+>
+  <main id="contenu" class="forum-page">
+    <p class="forum-fil">
+      <a href="/forum">← Retour au forum</a>
+    </p>
+
+    <h1><span aria-hidden="true">{categorie.icone}</span> {categorie.titre}</h1>
+    <p class="forum-intro">{categorie.resume}</p>
+
+    <div class="encadre-formules">
+      <h2>Exemples de sujets</h2>
+      <ul>
+        {categorie.exemples.map((exemple) => <li>{exemple}</li>)}
+      </ul>
+    </div>
+
+    <ForumDiscussion />
+
+    <nav class="forum-autres" aria-label="Autres catégories du forum">
+      <h2>Autres catégories</h2>
+      <ul>
+        {autres.map((c) => (
+          <li>
+            <a href={`/forum/${c.slug}`}>
+              <span aria-hidden="true">{c.icone}</span> {c.titre}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </main>
+</Layout>
+
+<style>
+  .forum-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  .forum-fil {
+    font-size: var(--taille-petit);
+    margin-bottom: var(--espace-2);
+  }
+  .forum-intro {
+    max-width: 700px;
+    color: #51606b;
+  }
+  .encadre-formules ul {
+    margin: 0.4rem 0 0;
+    padding-left: 1.2rem;
+  }
+  .encadre-formules li {
+    margin-bottom: 0.4rem;
+  }
+  .forum-autres {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-gris-bordure);
+  }
+  .forum-autres h2 {
+    font-size: 1rem;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .forum-autres ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.4rem;
+    font-size: var(--taille-petit);
+  }
+</style>
