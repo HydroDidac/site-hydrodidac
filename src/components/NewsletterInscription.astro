@@ -19,18 +19,17 @@ const configure = ACTION_BREVO.length > 0;
 ---
 <section class="newsletter no-print" aria-labelledby="newsletter-titre">
   <div class="newsletter-contenu">
-    <h2 id="newsletter-titre">Recevoir les nouvelles fiches</h2>
+    <h2 id="newsletter-titre">Newsletter</h2>
     <p class="newsletter-accroche">
-      Une lettre occasionnelle pour être prévenu des nouvelles fiches, des
-      nouveaux calculateurs et des sujets abordés sur le forum. Pas de
-      publicité, désinscription en un clic.
+      Tiens-toi informé des nouveautés sur HydroDidac. Pas de publicité,
+      désinscription en un clic.
     </p>
 
     {configure ? (
       <form class="newsletter-form" method="POST" action={ACTION_BREVO}>
         <div class="newsletter-ligne">
           <label class="newsletter-label" for="newsletter-email">
-            Votre adresse e-mail
+            Ton adresse e-mail
           </label>
           <div class="newsletter-champ">
             <input
