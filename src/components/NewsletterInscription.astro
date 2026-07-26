@@ -8,6 +8,10 @@
 // vide, l'encart affiche un simple message d'attente au lieu d'un formulaire
 // qui ne marcherait pas — les visiteurs ne voient donc jamais quelque chose
 // de cassé, même si le site est publié avant la configuration.
+// Le formulaire s'envoie dans le MÊME onglet : Brevo doit donc être réglé pour
+// rediriger vers https://hydrodidac.com/merci après inscription. Sans ce
+// réglage, le visiteur verrait la réponse technique brute de Brevo
+// ({"success":true,...}) à la place du site.
 const ACTION_BREVO =
   "https://5ab973c0.sibforms.com/serve/MUIFAIZe11p7jqQ1nBaVUXJT84D2u4stPxPBSvHrjAmbzDBliEQNS2LWFKrAvR4ZT-fXOvnzJJUQ_E0tRtOWOlzhmLry-vPJEktDNaUn5rFYJkA1uQXBaE7ZNC44BtiYzOMaTjjmV9VAxRrURfkRmP8cZXF6nYfsAS9xkQKvQfRxeqZX8oau_TRyynf1H5qeLoG5L693yD-HEYk4Uw==";
 
@@ -23,13 +27,7 @@ const configure = ACTION_BREVO.length > 0;
     </p>
 
     {configure ? (
-      <form
-        class="newsletter-form"
-        method="POST"
-        action={ACTION_BREVO}
-        target="_blank"
-        rel="noopener"
-      >
+      <form class="newsletter-form" method="POST" action={ACTION_BREVO}>
         <div class="newsletter-ligne">
           <label class="newsletter-label" for="newsletter-email">
             Votre adresse e-mail

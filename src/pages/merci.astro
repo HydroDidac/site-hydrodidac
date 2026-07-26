@@ -1,0 +1,77 @@
+---
+import Layout from "../components/Layout.astro";
+
+// Page d'arrivée après l'inscription à la lettre d'information.
+// Brevo doit être configuré pour rediriger vers https://hydrodidac.com/merci
+// (sinon il affiche sa réponse technique brute au visiteur).
+//
+// Le texte couvre les deux cas — avec ou sans confirmation par e-mail —
+// pour rester juste quel que soit le réglage côté Brevo.
+---
+<Layout
+  title="Merci pour votre inscription — HydroDidac"
+  description="Votre inscription à la lettre d'information HydroDidac a bien été prise en compte."
+>
+  <main id="contenu" class="merci-page">
+    <p class="merci-icone" aria-hidden="true">📬</p>
+    <h1>Merci, c'est noté !</h1>
+    <p class="merci-texte">
+      Votre inscription à la lettre d'information est bien prise en compte.
+    </p>
+    <div class="encadre-formules">
+      <p>
+        <strong>Vérifiez votre boîte mail.</strong> Si vous recevez un message
+        de confirmation, pensez à cliquer sur le lien qu'il contient pour
+        finaliser votre inscription. Pensez aussi à regarder dans les
+        courriers indésirables : c'est là qu'atterrissent souvent les premiers
+        messages d'un nouvel expéditeur.
+      </p>
+    </div>
+    <p class="merci-texte">
+      En attendant, il y a de quoi lire et calculer :
+    </p>
+    <p class="merci-liens">
+      <a class="btn" href="/fiches">Parcourir les fiches</a>
+      <a class="btn secondaire" href="/calculateurs">Ouvrir les calculateurs</a>
+      <a class="btn secondaire" href="/forum">Aller sur le forum</a>
+    </p>
+    <p class="merci-note">
+      Une question ou une suggestion ? Écrivez-moi à
+      <a href="mailto:contact@hydrodidac.com">contact@hydrodidac.com</a>.
+    </p>
+  </main>
+</Layout>
+
+<style>
+  .merci-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--espace-6) var(--espace-2);
+    text-align: center;
+  }
+  .merci-icone {
+    font-size: 3rem;
+    margin: 0 0 var(--espace-1);
+    line-height: 1;
+  }
+  .merci-page h1 {
+    margin-top: 0;
+  }
+  .merci-texte {
+    color: #51606b;
+  }
+  .merci-page .encadre-formules {
+    text-align: left;
+  }
+  .merci-liens {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--espace-1);
+    margin: var(--espace-3) 0;
+  }
+  .merci-note {
+    font-size: var(--taille-petit);
+    color: #51606b;
+  }
+</style>
