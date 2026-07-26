@@ -1,0 +1,69 @@
+---
+import Layout from "../components/Layout.astro";
+
+// Page d'arrivée APRÈS que le visiteur a cliqué sur le lien de l'e-mail de
+// double confirmation : son inscription est alors définitive.
+// À renseigner dans Brevo → « Page de confirmation affichée après validation
+// du lien présent dans l'email ».
+//
+// Ne pas confondre avec /merci, qui s'affiche juste après l'envoi du
+// formulaire, quand la confirmation par e-mail reste à faire.
+---
+<Layout
+  title="Inscription confirmée — HydroDidac"
+  description="Votre inscription à la lettre d'information HydroDidac est confirmée."
+>
+  <main id="contenu" class="merci-page">
+    <p class="merci-icone" aria-hidden="true">✅</p>
+    <h1>Inscription confirmée</h1>
+    <p class="merci-texte">
+      C'est bon, vous êtes inscrit à la lettre d'information HydroDidac. Vous
+      serez prévenu des nouvelles fiches, des nouveaux calculateurs et des
+      sujets abordés sur le forum.
+    </p>
+    <p class="merci-texte">
+      Pas de publicité, pas d'envoi abusif — et un lien de désinscription dans
+      chaque message.
+    </p>
+    <p class="merci-liens">
+      <a class="btn" href="/fiches">Parcourir les fiches</a>
+      <a class="btn secondaire" href="/calculateurs">Ouvrir les calculateurs</a>
+      <a class="btn secondaire" href="/forum">Aller sur le forum</a>
+    </p>
+    <p class="merci-note">
+      Une question ou une suggestion ? Écrivez-moi à
+      <a href="mailto:contact@hydrodidac.com">contact@hydrodidac.com</a>.
+    </p>
+  </main>
+</Layout>
+
+<style>
+  .merci-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--espace-6) var(--espace-2);
+    text-align: center;
+  }
+  .merci-icone {
+    font-size: 3rem;
+    margin: 0 0 var(--espace-1);
+    line-height: 1;
+  }
+  .merci-page h1 {
+    margin-top: 0;
+  }
+  .merci-texte {
+    color: #51606b;
+  }
+  .merci-liens {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--espace-1);
+    margin: var(--espace-3) 0;
+  }
+  .merci-note {
+    font-size: var(--taille-petit);
+    color: #51606b;
+  }
+</style>
