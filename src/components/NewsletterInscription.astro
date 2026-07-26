@@ -1,0 +1,166 @@
+---
+// Encart d'inscription à la newsletter, affiché sur toutes les pages
+// (juste au-dessus du pied de page).
+//
+// ⚠️ UNE SEULE CHOSE À FAIRE POUR L'ACTIVER : coller ci-dessous l'adresse du
+// formulaire fournie par Brevo (elle ressemble à
+// "https://xxxxx.sibforms.com/serve/MUIFAbCd..."). Tant que la ligne reste
+// vide, l'encart affiche un simple message d'attente au lieu d'un formulaire
+// qui ne marcherait pas — les visiteurs ne voient donc jamais quelque chose
+// de cassé, même si le site est publié avant la configuration.
+const ACTION_BREVO =
+  "https://5ab973c0.sibforms.com/serve/MUIFAIZe11p7jqQ1nBaVUXJT84D2u4stPxPBSvHrjAmbzDBliEQNS2LWFKrAvR4ZT-fXOvnzJJUQ_E0tRtOWOlzhmLry-vPJEktDNaUn5rFYJkA1uQXBaE7ZNC44BtiYzOMaTjjmV9VAxRrURfkRmP8cZXF6nYfsAS9xkQKvQfRxeqZX8oau_TRyynf1H5qeLoG5L693yD-HEYk4Uw==";
+
+const configure = ACTION_BREVO.length > 0;
+---
+<section class="newsletter no-print" aria-labelledby="newsletter-titre">
+  <div class="newsletter-contenu">
+    <h2 id="newsletter-titre">Recevoir les nouvelles fiches</h2>
+    <p class="newsletter-accroche">
+      Une lettre occasionnelle pour être prévenu des nouvelles fiches, des
+      nouveaux calculateurs et des sujets abordés sur le forum. Pas de
+      publicité, désinscription en un clic.
+    </p>
+
+    {configure ? (
+      <form
+        class="newsletter-form"
+        method="POST"
+        action={ACTION_BREVO}
+        target="_blank"
+        rel="noopener"
+      >
+        <div class="newsletter-ligne">
+          <label class="newsletter-label" for="newsletter-email">
+            Votre adresse e-mail
+          </label>
+          <div class="newsletter-champ">
+            <input
+              type="email"
+              id="newsletter-email"
+              name="EMAIL"
+              required
+              autocomplete="email"
+              placeholder="prenom.nom@exemple.fr"
+            />
+            <button type="submit">S'inscrire</button>
+          </div>
+        </div>
+
+        <label class="newsletter-consentement">
+          <input type="checkbox" name="OPT_IN" value="1" required />
+          <span>
+            J'accepte de recevoir la lettre d'information de HydroDidac et je
+            comprends que mon adresse ne sera ni revendue ni transmise à des
+            tiers. <a href="/mentions-legales">En savoir plus</a>.
+          </span>
+        </label>
+
+        {/* Champ piège invisible : les robots le remplissent, pas les humains. */}
+        <input
+          type="text"
+          name="email_address_check"
+          value=""
+          class="newsletter-piege"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+        />
+        <input type="hidden" name="locale" value="fr" />
+      </form>
+    ) : (
+      <p class="newsletter-attente">
+        📬 La lettre d'information ouvrira prochainement.
+      </p>
+    )}
+  </div>
+</section>
+
+<style>
+  .newsletter {
+    background: var(--color-formule-fond);
+    border-top: 1px solid var(--color-gris-bordure);
+    padding: var(--espace-4) 5%;
+  }
+  .newsletter-contenu {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .newsletter h2 {
+    margin: 0 0 var(--espace-1);
+    font-size: 1.25rem;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .newsletter-accroche {
+    margin: 0 0 var(--espace-2);
+    font-size: var(--taille-petit);
+    color: #51606b;
+  }
+  .newsletter-label {
+    display: block;
+    font-family: var(--font-texte);
+    font-size: var(--taille-petit);
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  .newsletter-champ {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .newsletter-champ input[type="email"] {
+    flex: 1 1 240px;
+    padding: 0.6em 0.8em;
+    font-family: var(--font-texte);
+    font-size: 1rem;
+    color: var(--color-anthracite);
+    background: var(--color-blanc);
+    border: 1px solid var(--color-gris-bordure);
+    border-radius: 4px;
+  }
+  .newsletter-champ input[type="email"]:focus {
+    outline: none;
+    border-color: var(--color-bleu-hydraulique);
+  }
+  .newsletter-champ button {
+    padding: 0.6em 1.4em;
+    font-family: var(--font-texte);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-blanc);
+    background: var(--color-bleu-hydraulique);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .newsletter-champ button:hover {
+    background: var(--color-bleu-fonce);
+  }
+  .newsletter-consentement {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: var(--espace-2);
+    font-size: 0.8rem;
+    color: #51606b;
+  }
+  .newsletter-consentement input {
+    margin-top: 0.2em;
+    flex-shrink: 0;
+  }
+  /* Le champ piège doit rester dans le DOM mais invisible et non focusable. */
+  .newsletter-piege {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  .newsletter-attente {
+    margin: 0;
+    font-size: var(--taille-petit);
+    color: #51606b;
+    font-style: italic;
+  }
+</style>
