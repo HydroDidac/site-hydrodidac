@@ -55,6 +55,20 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site).toString() : undefined
     {structuredData && (
       <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
     )}
+    <!--
+      Mesure d'audience Cloudflare Web Analytics.
+      Sans cookie ni identifiant de visiteur : aucun bandeau de consentement
+      n'est donc nécessaire (voir la page Mentions légales).
+      `is:inline` est indispensable : sans lui, Astro tenterait d'intégrer ce
+      script au reste du site et le beacon ne fonctionnerait plus.
+      Le jeton ci-dessous est public par nature — il identifie le site, pas un compte.
+    -->
+    <script
+      is:inline
+      type="module"
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "5118610ce4cc49db80bae466fdd8abb3"}'
+    ></script>
   </head>
   <body>
     <a href="#contenu" class="lien-evitement">Aller au contenu</a>
