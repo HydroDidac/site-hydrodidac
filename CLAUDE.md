@@ -42,10 +42,17 @@ et éviter de lui demander de toucher au code.
 ## État d'avancement (au 25 juillet 2026)
 - ✅ Site en ligne : accueil, sommaire des 15 modules, liste et pages de fiches,
   à-propos, mentions légales, 404, recherche Pagefind, CMS Decap + Worker OAuth
-- ✅ **Calculateurs** (`/calculateurs`) : 11 calculateurs avec sommaire latéral —
-  puissance, débit de pompe, couple, force / vitesse / temps de course de vérin,
-  vitesse en conduite, Reynolds, viscosité selon température, diamètre de
-  conduite, volume utile d'accumulateur. Chaque carte affiche la formule.
+- ✅ **Calculateurs** (`/calculateurs`) : 17 calculateurs, sommaire latéral en
+  7 groupes — puissance, débit de pompe, couple, vitesse de moteur hydraulique,
+  force / vitesse / temps de course de vérin, vitesse en conduite, Reynolds,
+  diamètre de conduite, pertes de charge, diamètre de gicleur, débit d'orifice,
+  viscosité selon température, bilan thermique et échangeur, échauffement,
+  volume utile d'accumulateur.
+  Chaque carte affiche la formule et un bloc dépliable « Pour aller plus loin »
+  à deux niveaux (🟢 débutant / 🔴 expert).
+  Le sommaire **filtre** l'affichage : cliquer une entrée n'affiche que ce
+  calculateur (état porté par l'ancre `#calc-xxx`, donc partageable) ;
+  l'entrée « Tous les calculateurs » revient à la grille complète.
 - ✅ **Forum** (`/forum`) : page d'index avec 6 catégories + une page par
   catégorie portant son propre fil de discussion (voir section dédiée).
 - ✅ **Mesure d'audience** : Cloudflare Web Analytics, beacon posé dans
@@ -107,8 +114,34 @@ GitHub gratuit (ce qui limite le spam mais reste une friction assumée).
   `../collecte/documents/base_de_donnees_huiles_hydrauliques_integrale.md`.
   N'ajouter une huile que si **les deux** viscosités (40 °C et 100 °C) sont
   connues : l'interpolation Walther/ASTM D341 a besoin de deux points.
+- `src/data/huiles-standard.js` ajoute une marque **« Standard »** (18 huiles
+  génériques du type « Huile minérale standard 46 cSt »), pour l'utilisateur qui
+  ignore la marque de son huile mais connaît son type et son grade. Ces valeurs
+  sont **dérivées du catalogue réel**, jamais inventées : pour chaque couple
+  famille + grade ISO comptant au moins 3 huiles, on retient celle qui est la
+  plus proche des viscosités médianes du groupe, ce qui garde les trois valeurs
+  (40 °C, 100 °C, VI) cohérentes entre elles. Le module exporte `catalogue`
+  (standard puis marques) et `libelleHuile()` — c'est `catalogue` qu'utilisent
+  les pages, pas `huiles` directement.
 - Ajouter un calculateur = ajouter la section + l'entrée correspondante dans le
   tableau `sommaire` en tête de fichier.
+- Le sélecteur d'huile (filtres marque/type/grade + liste) est **mutualisé** :
+  les fonctions `construireOptionsHuiles(p)` et `majHuile(p)` prennent un
+  préfixe d'identifiants (`vi` = viscosité, `gi` = gicleur). Pour brancher le
+  catalogue d'huiles sur un nouveau calculateur, dupliquer le bloc de filtres
+  avec un nouveau préfixe, poser `class="calc-filtre"` / `class="calc-huile-select"`
+  et `data-prefixe="<préfixe>"`, plus les champs cachés `<préfixe>-n1` / `-n2`.
+- Reste 6 calculateurs à intégrer, spécifiés dans
+  `../SPECS_CALCULATEURS_MANQUANTS.md` : réservoir, moteur d'entraînement,
+  flambage de tige (Euler), pertes dans les accessoires, rigidité hydraulique,
+  convertisseur d'unités. Le n° 2 de cette spec (bilan thermique) est fait.
+- Les fonctions physiques partagées sont en tête du script : `viscositeA()`
+  (Walther/ASTM D341), `masseVolumiqueA()` (densité par famille d'huile, corrigée
+  en température), `verdictOrifice()` (validité du coefficient de débit selon
+  le régime d'écoulement) et `surfaceReservoir()` (surface d'échange d'un
+  réservoir assimilé à un cube, 6 faces — **partagée par les deux calculateurs
+  thermiques** pour qu'ils ne se contredisent pas sur le même réservoir).
+  Les réutiliser plutôt que de recopier le calcul.
 
 ## Organisation de l'équipe (Pôle A)
 - `directeur-creation` — lead, coordonne les agents ci-dessous

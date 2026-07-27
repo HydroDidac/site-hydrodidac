@@ -1,10 +1,16 @@
 ---
 import Layout from "../components/Layout.astro";
-import { huiles, infosFamille } from "../data/huiles-hydrauliques.js";
+import { infosFamille } from "../data/huiles-hydrauliques.js";
+import { catalogue, libelleHuile } from "../data/huiles-standard.js";
 
-const marques = [...new Set(huiles.map((h) => h.marque))].sort((a, b) =>
-  a.localeCompare(b, "fr")
-);
+// « Standard » en tête de la liste des marques : c'est le choix de celui qui ne
+// connaît pas la marque exacte de son huile, il doit être le plus accessible.
+const marques = [
+  "Standard",
+  ...[...new Set(catalogue.map((h) => h.marque))]
+    .filter((m) => m !== "Standard")
+    .sort((a, b) => a.localeCompare(b, "fr")),
+];
 
 const familles = Object.entries(infosFamille).map(([code, info]) => ({
   code,
@@ -14,23 +20,28 @@ const familles = Object.entries(infosFamille).map(([code, info]) => ({
 // Grades ISO VG numériques uniquement (correspond à la viscosité à 40 °C) :
 // les entrées atypiques (« 10W-30 », « 46-68 », « — ») restent visibles via
 // « Toutes les viscosités » mais ne sont pas listées comme grade filtrable.
-const grades = [...new Set(huiles.map((h) => h.vg).filter((vg) => /^\d+$/.test(vg)))]
+const grades = [...new Set(catalogue.map((h) => h.vg).filter((vg) => /^\d+$/.test(vg)))]
   .map(Number)
   .sort((a, b) => a - b);
+
+// Huile pré-sélectionnée à l'ouverture : la minérale standard 46 cSt, le cas le
+// plus courant en hydraulique industrielle — et un choix neutre, sans marque.
+const huileParDefaut = "Huile minérale standard 46 cSt";
 
 // Sommaire de la page, regroupé par thème (utilisé pour l'arborescence de
 // navigation à gauche). Chaque item pointe vers l'id de la carte correspondante.
 const sommaire = [
   {
-    titre: "Pompe & puissance",
+    titre: "🛠️ Pompe & puissance",
     items: [
       { id: "calc-puissance", label: "Puissance hydraulique" },
       { id: "calc-debit", label: "Débit d'une pompe" },
       { id: "calc-couple", label: "Couple sur l'arbre" },
+      { id: "calc-vitesse-moteur", label: "Vitesse d'un moteur hydraulique" },
     ],
   },
   {
-    titre: "Vérin",
+    titre: "🔧 Vérin",
     items: [
       { id: "calc-force", label: "Force d'un vérin" },
       { id: "calc-vitesse-verin", label: "Vitesse d'un vérin" },
@@ -38,31 +49,47 @@ const sommaire = [
     ],
   },
   {
-    titre: "Conduites & écoulement",
+    titre: "〰️ Conduites & écoulement",
     items: [
       { id: "calc-vitesse-conduite", label: "Vitesse du fluide en conduite" },
       { id: "calc-reynolds", label: "Nombre de Reynolds" },
       { id: "calc-diametre", label: "Diamètre de conduite conseillé" },
+      { id: "calc-pertes", label: "Pertes de charge en conduite" },
     ],
   },
   {
-    titre: "Fluide hydraulique",
+    titre: "🎯 Gicleurs & étranglements",
+    items: [
+      { id: "calc-gicleur", label: "Diamètre d'un gicleur" },
+      { id: "calc-debit-orifice", label: "Débit à travers un orifice" },
+    ],
+  },
+  {
+    titre: "🛢️ Fluide hydraulique",
     items: [{ id: "calc-viscosite", label: "Viscosité selon la température" }],
   },
   {
-    titre: "Stockage d'énergie",
+    titre: "🌡️ Thermique",
+    items: [
+      { id: "calc-bilan-thermique", label: "Bilan thermique et échangeur" },
+      { id: "calc-echauffement", label: "Échauffement et puissance dissipée" },
+    ],
+  },
+  {
+    titre: "🔋 Stockage d'énergie",
     items: [{ id: "calc-accu", label: "Accumulateur : volume utile" }],
   },
 ];
 ---
 <Layout
   title="Calculateurs hydrauliques — HydroDidac"
-  description="Calculateurs hydrauliques en ligne : puissance, débit de pompe, couple, force et vitesse de vérin, vitesse en conduite, nombre de Reynolds, viscosité selon la température, temps de course, diamètre de conduite, accumulateur. Formules expliquées."
+  description="Calculateurs hydrauliques en ligne : puissance, débit de pompe, couple, force et vitesse de vérin, vitesse en conduite, nombre de Reynolds, viscosité selon la température, temps de course, diamètre de conduite, pertes de charge, diamètre de gicleur, bilan thermique et dimensionnement d'échangeur, accumulateur. Formules expliquées."
 >
   <main id="contenu" class="calc-page">
     <div class="calc-layout">
       <nav class="calc-sommaire" aria-label="Sommaire des calculateurs">
         <p class="calc-sommaire-titre">Sommaire</p>
+        <a href="#tous" data-cible="tous" class="calc-sommaire-tous">📋 Tous les calculateurs</a>
         <ul>
           {sommaire.map((groupe) => (
             <li>
@@ -84,6 +111,9 @@ const sommaire = [
       est autant de <strong>comprendre</strong> que de calculer. Les résultats
       se mettent à jour automatiquement dès que vous modifiez une valeur.
     </p>
+    <p class="calc-retour" id="calc-retour" hidden>
+      <a href="#tous" data-cible="tous">← Tous les calculateurs</a>
+    </p>
 
     <div class="calc-grille">
 
@@ -103,6 +133,11 @@ const sommaire = [
           <span class="resultat-valeur" id="pu-res">—</span>
         </div>
         <p class="calc-note">Puissance hydraulique « utile ». La puissance du moteur d'entraînement doit être supérieure pour compenser les rendements de la pompe.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>La puissance hydraulique, c'est l'énergie que le fluide transporte chaque seconde. Un gros débit à faible pression peut transmettre autant de puissance qu'un petit débit à haute pression.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Cette puissance « utile » ne tient pas compte des rendements : la puissance mécanique à fournir sur l'arbre de pompe est plus élevée (P<sub>arbre</sub> = P<sub>hydraulique</sub> ÷ η<sub>global</sub>, avec η<sub>global</sub> = η<sub>v</sub> × η<sub>m</sub> ≈ 0,85 en général). En cycles courts, ne confondez pas puissance crête et puissance moyenne pour le dimensionnement thermique du groupe.</p>
+        </details>
       </section>
 
       <!-- 2. Débit d'une pompe -->
@@ -124,6 +159,11 @@ const sommaire = [
           <span class="resultat-valeur" id="de-res">—</span>
         </div>
         <p class="calc-note">η<sub>v</sub> vaut typiquement 90 à 98 % pour une pompe en bon état. Un débit mesuré nettement inférieur au calcul est un signe d'usure interne.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>La cylindrée indique le volume d'huile déplacé à chaque tour de l'arbre ; multipliée par la vitesse de rotation, elle donne le débit théorique. Le rendement volumétrique corrige ce chiffre pour tenir compte des fuites internes, inévitables dans toute pompe.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>η<sub>v</sub> diminue avec la pression (glissement interne croissant) et avec l'usure des composants internes : comparer le débit mesuré à chaud au débit théorique est un bon indicateur d'état de pompe. Respectez aussi la plage de vitesse de rotation du constructeur — trop lente favorise la cavitation à l'aspiration, trop rapide accélère l'usure et l'échauffement.</p>
+        </details>
       </section>
 
       <!-- 3. Couple sur l'arbre -->
@@ -142,6 +182,11 @@ const sommaire = [
           <span class="resultat-valeur" id="co-res">—</span>
         </div>
         <p class="calc-note">62,8 = 20 × π. Pour une pompe, le couple réel à fournir est plus élevé (divisez par le rendement mécanique) ; pour un moteur, le couple réel disponible est plus faible.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Le couple ne dépend que de la cylindrée et de la différence de pression, pas de la vitesse de rotation — une pompe qui tourne lentement développe le même couple qu'une pompe rapide, à pression égale.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Le rendement mécanique chute encore au démarrage à froid — un point à vérifier pour le dimensionnement du moteur électrique d'entraînement, qui doit encaisser ce couple de démarrage plus élevé sans déclencher sa protection thermique.</p>
+        </details>
       </section>
 
       <!-- 4. Force d'un vérin -->
@@ -167,6 +212,11 @@ const sommaire = [
           <span class="resultat-valeur" id="fo-res-ret">—</span>
         </div>
         <p class="calc-note">S = π×D²/4 côté fond, π×(D²−d²)/4 côté tige. La force en rentrée est toujours plus faible : la tige « vole » une partie de la surface du piston.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>La force dépend de la surface du piston exposée à la pression. Côté tige, une partie de cette surface est « prise » par la tige elle-même : c'est pourquoi un vérin pousse toujours plus fort qu'il ne tire.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Pour les tiges longues et fines (grand élancement course/diamètre), vérifiez le risque de flambage (formule d'Euler) avant de fixer le diamètre de tige. En cas de chocs ou de fins de course dures, gardez une marge par rapport à la pression de tarage du limiteur : la pression instantanée peut la dépasser.</p>
+        </details>
       </section>
 
       <!-- 5. Vitesse d'un vérin -->
@@ -192,6 +242,11 @@ const sommaire = [
           <span class="resultat-valeur" id="vv-res-ret">—</span>
         </div>
         <p class="calc-note">À débit égal, la tige rentre plus vite qu'elle ne sort : la surface annulaire est plus petite, donc le même débit la remplit plus vite.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>À débit constant, un piston de grand diamètre se déplace plus lentement qu'un piston fin : il faut plus d'huile pour remplir le même volume balayé.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Vitesse et force évoluent en sens inverse à débit et pression donnés : le choix du diamètre est souvent un compromis fixé par le temps de cycle visé. Au-delà d'environ 0,1–0,3 m/s en fin de course, un amortisseur (coussinet hydraulique) devient nécessaire pour éviter les chocs sur la culasse.</p>
+        </details>
       </section>
 
       <!-- 6. Vitesse du fluide en conduite -->
@@ -225,6 +280,11 @@ const sommaire = [
             <tr id="vc-row-pression"><td>Pression</td><td class="valeur">3 – 6 m/s</td></tr>
           </tbody>
         </table>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Une conduite trop étroite pour le débit qui la traverse crée des pertes de charge et un échauffement inutiles ; une conduite trop large est simplement surdimensionnée — sans risque, mais plus chère et plus encombrante.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Les plages du tableau sont des repères généraux : resserrez-les pour les huiles très visqueuses ou les circuits longs. L'aspiration mérite une marge de sécurité supplémentaire par temps froid, quand la viscosité de démarrage est nettement plus élevée qu'en service.</p>
+        </details>
       </section>
 
       <!-- 7. Nombre de Reynolds -->
@@ -247,6 +307,11 @@ const sommaire = [
         </div>
         <p class="calc-note" id="re-verdict"></p>
         <p class="calc-note">Repère : une huile HV 46 fait 46 cSt à 40 °C. En hydraulique, on cherche à rester en régime laminaire (Re &lt; 2300).</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Le nombre de Reynolds indique si l'écoulement est réglé (laminaire) ou chahuté (turbulent). Un écoulement turbulent consomme plus d'énergie, chauffe plus et use plus vite les composants.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Le seuil de 2300 est valable pour un tube lisse rectiligne ; coudes, raccords et variations de section abaissent le Reynolds critique réel. Comme la viscosité chute avec la température, un circuit laminaire à chaud peut devenir turbulent au démarrage à froid — pensez à vérifier les deux cas.</p>
+        </details>
       </section>
 
       <!-- 8. Viscosité selon la température -->
@@ -257,38 +322,39 @@ const sommaire = [
         <p class="calc-filtres-titre">Filtrer le catalogue :</p>
         <div class="calc-filtres">
           <label>Marque
-            <select id="vi-filtre-marque" class="calc-filtre">
+            <select id="vi-filtre-marque" class="calc-filtre" data-prefixe="vi">
               <option value="">Toutes</option>
               {marques.map((marque) => <option value={marque}>{marque}</option>)}
             </select>
           </label>
           <label>Type d'huile
-            <select id="vi-filtre-type" class="calc-filtre">
+            <select id="vi-filtre-type" class="calc-filtre" data-prefixe="vi">
               <option value="">Tous</option>
               {familles.map((f) => <option value={f.code}>{f.label}</option>)}
             </select>
           </label>
           <label>Viscosité à 40 °C
-            <select id="vi-filtre-vg" class="calc-filtre">
+            <select id="vi-filtre-vg" class="calc-filtre" data-prefixe="vi">
               <option value="">Toutes</option>
               {grades.map((g) => <option value={g}>ISO VG {g}</option>)}
             </select>
           </label>
         </div>
         <label>Huile
-          <select id="vi-huile">
+          <select id="vi-huile" class="calc-huile-select" data-prefixe="vi">
             {marques.map((marque) => (
               <optgroup label={marque}>
-                {huiles
+                {catalogue
                   .filter((h) => h.marque === marque)
                   .map((h) => (
                     <option
                       value={`${h.n40}|${h.n100}`}
                       data-vi={h.vi}
                       data-fam={h.fam}
-                      selected={marque === "Fuchs" && h.nom === "Renolin B 46" ? true : undefined}
+                      data-echantillon={h.echantillon}
+                      selected={h.nom === huileParDefaut ? true : undefined}
                     >
-                      {h.nom} (VG {h.vg} · VI {h.vi})
+                      {libelleHuile(h)}
                     </option>
                   ))}
               </optgroup>
@@ -308,6 +374,11 @@ const sommaire = [
         <p class="calc-note" id="vi-verdict"></p>
         <p class="calc-note" id="vi-fiche"></p>
         <div class="calc-huile-info" id="vi-info"></div>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>La viscosité, c'est la « fluidité » de l'huile : trop fluide, elle ne forme plus un film suffisant entre les pièces en mouvement (usure) ; trop épaisse, elle est difficile à pomper, surtout au démarrage à froid.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>L'indice de viscosité (VI) traduit la stabilité de cette viscosité avec la température : plus il est élevé (huiles HV), plus l'écart entre démarrage à froid et fonctionnement à chaud est réduit. Croisez toujours ce résultat avec la température ambiante minimale du site et le type de composants du circuit — servovalves et distributeurs proportionnels exigent une plage de viscosité plus stricte que la robinetterie standard.</p>
+        </details>
       </section>
 
       <!-- 9. Temps de course d'un vérin -->
@@ -336,6 +407,11 @@ const sommaire = [
           <span class="resultat-valeur" id="tv-res-ret">—</span>
         </div>
         <p class="calc-note" id="tv-note"></p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Le temps de course dépend du volume à remplir (section × course) et du débit disponible : à débit égal, un vérin plus gros ou une course plus longue prend logiquement plus de temps.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Ce calcul donne un temps « plein débit », donc optimiste : en cycle réel, il faut ajouter le temps de commutation du distributeur et les rampes d'accélération/décélération, ce qui allonge le temps constaté de l'ordre de 10 à 20 %.</p>
+        </details>
       </section>
 
       <!-- 10. Diamètre de conduite conseillé -->
@@ -358,6 +434,11 @@ const sommaire = [
           <span class="resultat-valeur" id="di-res">—</span>
         </div>
         <p class="calc-note">Choisissez ensuite le tube ou flexible de dimension normalisée immédiatement <strong>supérieure</strong> : un diamètre plus grand réduit les pertes de charge et l'échauffement.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Ce résultat est un diamètre minimal, pas une dimension commerciale : choisissez toujours la taille de tube ou flexible normalisée immédiatement supérieure.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Un diamètre trop juste accélère le vieillissement des flexibles par échauffement répété ; sur les lignes longues, une marge supplémentaire limite les pertes de charge cumulées. Vérifiez le régime d'écoulement résultant avec le calculateur de nombre de Reynolds.</p>
+        </details>
       </section>
 
       <!-- 11. Accumulateur : volume utile -->
@@ -387,6 +468,305 @@ const sommaire = [
         </div>
         <p class="calc-note" id="ac-verdict"></p>
         <p class="calc-note">Gonflage conseillé : p₀ ≈ 0,9 × p<sub>min</sub> (à vérifier huile à température de service). Les pressions saisies sont relatives (manomètre) : le calcul ajoute 1 bar pour passer en absolu. ⚠️ Le gonflage se fait exclusivement à l'azote.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Un accumulateur stocke de l'énergie hydraulique comme un ressort à gaz : le volume utile est la quantité d'huile qu'il peut restituer entre la pression mini et la pression maxi du circuit.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Le cycle isotherme (lent) et le cycle adiabatique (rapide) donnent deux bornes : un fonctionnement réel, avec à-coups, se situe généralement entre les deux. Le gonflage à l'azote doit être recontrôlé périodiquement — la vessie laisse diffuser une petite quantité de gaz avec le temps — et toujours mesuré à froid, avant remise en pression du circuit.</p>
+        </details>
+      </section>
+
+      <!-- 12. Vitesse d'un moteur hydraulique -->
+      <section class="calc-carte" id="calc-vitesse-moteur">
+        <h2>Vitesse d'un moteur hydraulique</h2>
+        <p class="calc-desc">Vitesse de rotation obtenue pour un débit donné — le calcul inverse de celui du débit de pompe.</p>
+        <p class="calc-formule">N (tr/min) = Q (L/min) × 1000 × η<sub>v</sub> ÷ Cyl (cm³/tr)</p>
+        <label>Débit Q <span class="unite">L/min</span>
+          <input type="number" id="mo-q" value="60" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Cylindrée du moteur <span class="unite">cm³/tr</span>
+          <input type="number" id="mo-cyl" value="200" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Rendement volumétrique η<sub>v</sub> <span class="unite">%</span>
+          <input type="number" id="mo-rv" value="95" min="0" max="100" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Vitesse de rotation</span>
+          <span class="resultat-valeur" id="mo-res">—</span>
+        </div>
+        <p class="calc-note">Une grande cylindrée donne un moteur lent et couple élevé ; une petite cylindrée, un moteur rapide et couple faible.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Un moteur hydraulique, c'est une pompe qui fonctionne à l'envers : au lieu de consommer de la rotation pour produire du débit, il consomme du débit pour produire de la rotation.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Une partie du débit fuit en interne sans produire de rotation, d'où le rendement volumétrique — d'autant plus pénalisant que le moteur tourne lentement, car les fuites ne dépendent que de la pression, pas de la vitesse. Aux très basses vitesses, surveillez aussi le phénomène de broutage (<em>stick-slip</em>) : consultez la vitesse minimale garantie par le constructeur, souvent bien plus contraignante que le calcul.</p>
+        </details>
+      </section>
+
+      <!-- 13. Pertes de charge en conduite -->
+      <section class="calc-carte" id="calc-pertes">
+        <h2>Pertes de charge en conduite</h2>
+        <p class="calc-desc">Pression perdue par frottement sur une longueur de tube ou de flexible, et puissance correspondante transformée en chaleur.</p>
+        <p class="calc-formule">Δp = λ × (L ÷ d) × ρ × v² ÷ 2</p>
+        <label>Débit Q <span class="unite">L/min</span>
+          <input type="number" id="pe-q" value="60" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Diamètre intérieur d <span class="unite">mm</span>
+          <input type="number" id="pe-d" value="16" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Longueur de conduite L <span class="unite">m</span>
+          <input type="number" id="pe-l" value="10" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Viscosité cinématique ν <span class="unite">cSt</span>
+          <input type="number" id="pe-nu" value="30" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Masse volumique ρ <span class="unite">kg/m³</span>
+          <input type="number" id="pe-rho" value="870" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Perte de charge</span>
+          <span class="resultat-valeur" id="pe-res">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Puissance perdue en chaleur</span>
+          <span class="resultat-valeur" id="pe-res-p">—</span>
+        </div>
+        <p class="calc-note" id="pe-note"></p>
+        <p class="calc-note" id="pe-verdict"></p>
+        <p class="calc-note">Calcul valable pour un tube lisse rectiligne. Les coudes, raccords et cartouches ajoutent des pertes supplémentaires, à prendre dans les données du fabricant.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Toute pression perdue en frottement est de l'énergie transformée en chaleur : elle fait monter la température de l'huile sans produire aucun travail utile. C'est de l'énergie payée mais perdue.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Le coefficient λ vaut 64/Re en régime laminaire, où la perte de charge est proportionnelle au débit ; en turbulent, la corrélation de Blasius s'applique et la perte varie approximativement au carré du débit. Doubler le diamètre divise la perte par environ 32 en laminaire — le diamètre est de très loin le paramètre le plus efficace.</p>
+        </details>
+      </section>
+
+      <!-- 14. Diamètre d'un gicleur -->
+      <section class="calc-carte calc-carte--large" id="calc-gicleur">
+        <h2>Diamètre d'un gicleur</h2>
+        <p class="calc-desc">Diamètre d'orifice calibré à percer pour obtenir un débit visé sous une différence de pression donnée. La viscosité et la masse volumique réelles de l'huile choisie, à la température de service, sont utilisées pour le calcul.</p>
+        <p class="calc-formule">Q = C<sub>d</sub> × A × √(2 Δp ÷ ρ) &nbsp;→&nbsp; d = √(4A ÷ π)</p>
+        <label>Débit visé Q <span class="unite">L/min</span>
+          <input type="number" id="gi-q" value="10" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Différence de pression Δp aux bornes du gicleur <span class="unite">bar</span>
+          <input type="number" id="gi-dp" value="100" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Type d'orifice
+          <select id="gi-cd">
+            <option value="0.61" selected>Arête vive (perçage simple) — Cd 0,61</option>
+            <option value="0.7">Gicleur usiné / chanfreiné — Cd 0,70</option>
+            <option value="0.8">Tuyère profilée — Cd 0,80</option>
+          </select>
+        </label>
+        <p class="calc-filtres-titre">Huile utilisée dans le circuit :</p>
+        <div class="calc-filtres">
+          <label>Marque
+            <select id="gi-filtre-marque" class="calc-filtre" data-prefixe="gi">
+              <option value="">Toutes</option>
+              {marques.map((marque) => <option value={marque}>{marque}</option>)}
+            </select>
+          </label>
+          <label>Type d'huile
+            <select id="gi-filtre-type" class="calc-filtre" data-prefixe="gi">
+              <option value="">Tous</option>
+              {familles.map((f) => <option value={f.code}>{f.label}</option>)}
+            </select>
+          </label>
+          <label>Viscosité à 40 °C
+            <select id="gi-filtre-vg" class="calc-filtre" data-prefixe="gi">
+              <option value="">Toutes</option>
+              {grades.map((g) => <option value={g}>ISO VG {g}</option>)}
+            </select>
+          </label>
+        </div>
+        <label>Huile
+          <select id="gi-huile" class="calc-huile-select" data-prefixe="gi">
+            {marques.map((marque) => (
+              <optgroup label={marque}>
+                {catalogue
+                  .filter((h) => h.marque === marque)
+                  .map((h) => (
+                    <option
+                      value={`${h.n40}|${h.n100}`}
+                      data-vi={h.vi}
+                      data-fam={h.fam}
+                      data-echantillon={h.echantillon}
+                      selected={h.nom === huileParDefaut ? true : undefined}
+                    >
+                      {libelleHuile(h)}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+        <p class="calc-note" id="gi-nb-resultats"></p>
+        <label>Température de l'huile <span class="unite">°C</span>
+          <input type="number" id="gi-t" value="50" step="any" inputmode="decimal" />
+        </label>
+        <input type="hidden" id="gi-n1" />
+        <input type="hidden" id="gi-n2" />
+        <div class="calc-resultat">
+          <span class="resultat-label">Diamètre du gicleur</span>
+          <span class="resultat-valeur" id="gi-res">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Vitesse dans l'orifice</span>
+          <span class="resultat-valeur" id="gi-res-v">—</span>
+        </div>
+        <p class="calc-note" id="gi-fiche-calc"></p>
+        <p class="calc-note" id="gi-verdict"></p>
+        <p class="calc-note" id="gi-alerte"></p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Un gicleur est un trou calibré qui laisse passer un débit précis sous une pression donnée. Plus la pression est forte, plus il passe de débit dans le même trou — le débit varie comme la racine carrée de la pression, pas proportionnellement à elle.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Le coefficient de débit C<sub>d</sub> n'est constant qu'en régime turbulent dans l'orifice (Re &gt; 1000 environ) : c'est justement l'intérêt d'un orifice à arête vive, peu sensible à la viscosité, contrairement à un étranglement long qui se comporte en restricteur laminaire. À froid ou sur les très petits diamètres, on retombe en régime visqueux et le débit chute — d'où le contrôle systématique du nombre de Reynolds affiché ici. La masse volumique tient compte de la famille d'huile (les esters biodégradables sont plus denses d'environ 6 %) et de sa dilatation avec la température.</p>
+        </details>
+      </section>
+
+      <!-- 15. Débit à travers un orifice -->
+      <section class="calc-carte" id="calc-debit-orifice">
+        <h2>Débit à travers un orifice</h2>
+        <p class="calc-desc">Le calcul inverse du précédent : débit réellement obtenu à travers un gicleur ou un orifice existant, utile en diagnostic.</p>
+        <p class="calc-formule">Q = C<sub>d</sub> × A × √(2 Δp ÷ ρ)</p>
+        <label>Diamètre de l'orifice d <span class="unite">mm</span>
+          <input type="number" id="or-d" value="1" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Différence de pression Δp <span class="unite">bar</span>
+          <input type="number" id="or-dp" value="100" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Type d'orifice
+          <select id="or-cd">
+            <option value="0.61" selected>Arête vive (perçage simple) — Cd 0,61</option>
+            <option value="0.7">Gicleur usiné / chanfreiné — Cd 0,70</option>
+            <option value="0.8">Tuyère profilée — Cd 0,80</option>
+          </select>
+        </label>
+        <label>Viscosité cinématique ν <span class="unite">cSt</span>
+          <input type="number" id="or-nu" value="30" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Masse volumique ρ <span class="unite">kg/m³</span>
+          <input type="number" id="or-rho" value="870" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Débit à travers l'orifice</span>
+          <span class="resultat-valeur" id="or-res">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Vitesse dans l'orifice</span>
+          <span class="resultat-valeur" id="or-res-v">—</span>
+        </div>
+        <p class="calc-note" id="or-note"></p>
+        <p class="calc-note" id="or-verdict"></p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Utile pour vérifier un gicleur en place : si le débit mesuré est nettement supérieur au calcul, l'orifice s'est probablement agrandi par érosion ; s'il est inférieur, il est en train de se colmater.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Aux fortes différences de pression, la vitesse dans l'orifice peut approcher la vitesse à laquelle la pression locale descend sous la tension de vapeur de l'huile : apparaissent alors cavitation, bruit et érosion en aval. C'est le cas typique d'une prise de pression pilote fortement laminée — répartir la chute sur deux orifices en série est une parade classique.</p>
+        </details>
+      </section>
+
+      <!-- 16. Bilan thermique et échangeur -->
+      <section class="calc-carte" id="calc-bilan-thermique">
+        <h2>Bilan thermique et échangeur</h2>
+        <p class="calc-desc">Chaleur produite par l'ensemble du circuit, température que l'huile atteindrait sans refroidisseur, et puissance d'échangeur à prévoir pour tenir une température cible.</p>
+        <p class="calc-formule">P<sub>diss</sub> = P<sub>hyd</sub> × (1 − η) &nbsp;·&nbsp; T<sub>éq</sub> = T<sub>amb</sub> + P<sub>diss</sub> ÷ (k × S)</p>
+        <label>Origine de la puissance dissipée
+          <select id="bt-mode">
+            <option value="rendement" selected>L'estimer d'après le rendement global</option>
+            <option value="direct">Je connais la puissance dissipée</option>
+          </select>
+        </label>
+        <div id="bt-champs-rendement">
+          <label>Débit de la pompe Q <span class="unite">L/min</span>
+            <input type="number" id="bt-q" value="60" min="0" step="any" inputmode="decimal" />
+          </label>
+          <label>Pression de service p <span class="unite">bar</span>
+            <input type="number" id="bt-p" value="200" min="0" step="any" inputmode="decimal" />
+          </label>
+          <label>Rendement global du groupe η <span class="unite">%</span>
+            <input type="number" id="bt-eta" value="80" min="1" max="99" step="any" inputmode="decimal" />
+          </label>
+        </div>
+        <div id="bt-champs-direct" hidden>
+          <label>Puissance dissipée mesurée <span class="unite">kW</span>
+            <input type="number" id="bt-pdiss" value="2.5" min="0" step="any" inputmode="decimal" />
+          </label>
+        </div>
+        <label>Volume du réservoir <span class="unite">L</span>
+          <input type="number" id="bt-v" value="250" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Échange du réservoir avec l'air
+          <select id="bt-k">
+            <option value="10">Réservoir encoffré ou encrassé (k = 10 W/m²·K)</option>
+            <option value="12" selected>Tôle propre, air calme (k = 12 W/m²·K)</option>
+            <option value="15">Bien dégagé ou légèrement ventilé (k = 15 W/m²·K)</option>
+          </select>
+        </label>
+        <label>Température ambiante <span class="unite">°C</span>
+          <input type="number" id="bt-tamb" value="25" step="any" inputmode="decimal" />
+        </label>
+        <label>Température d'huile visée <span class="unite">°C</span>
+          <input type="number" id="bt-tcible" value="55" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Puissance dissipée en chaleur</span>
+          <span class="resultat-valeur" id="bt-res-pdiss">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Température d'équilibre sans échangeur</span>
+          <span class="resultat-valeur" id="bt-res-teq">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Échangeur à prévoir</span>
+          <span class="resultat-valeur" id="bt-res-echangeur">—</span>
+        </div>
+        <p class="calc-note" id="bt-note"></p>
+        <p class="calc-note" id="bt-verdict"></p>
+        <p class="calc-note">Ordre de grandeur en régime établi, avec la seule convection naturelle du réservoir : ce n'est pas un calcul normatif. Les tuyauteries et les composants évacuent aussi une part de la chaleur.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Toute l'énergie perdue dans l'installation — rendements des composants, laminages, pertes de charge — finit en chaleur dans l'huile. Le réservoir en évacue une partie par ses parois ; au-delà, il faut un échangeur. Au-dessus d'environ 60 °C, l'huile s'oxyde nettement plus vite.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Le coefficient k dépend beaucoup de la ventilation et de la propreté des parois : un réservoir encoffré ou couvert de poussière évacue bien moins que la valeur théorique. Pour un dimensionnement sérieux, distinguez la puissance crête de la puissance moyenne sur le cycle machine — c'est la moyenne qui fixe la taille de l'échangeur, la crête qui fixe l'inertie thermique acceptable. Ce calculateur traite le bilan global ; pour la chaleur produite par un seul étranglement, utilisez « Échauffement et puissance dissipée ».</p>
+        </details>
+      </section>
+
+      <!-- 17. Échauffement et puissance dissipée -->
+      <section class="calc-carte" id="calc-echauffement">
+        <h2>Échauffement et puissance dissipée</h2>
+        <p class="calc-desc">Puissance transformée en chaleur par un laminage (limiteur, étranglement, décharge) et température d'équilibre atteinte par le réservoir sans refroidisseur.</p>
+        <p class="calc-formule">P (kW) = Q × Δp ÷ 600 &nbsp;·&nbsp; ΔT = P ÷ (k × S)</p>
+        <label>Débit laminé Q <span class="unite">L/min</span>
+          <input type="number" id="ec-q" value="10" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Pression perdue Δp <span class="unite">bar</span>
+          <input type="number" id="ec-dp" value="50" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Volume du réservoir <span class="unite">L</span>
+          <input type="number" id="ec-v" value="200" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Ventilation du réservoir
+          <select id="ec-k">
+            <option value="12" selected>Air calme (k = 12 W/m²·K)</option>
+            <option value="20">Air ventilé / ventilateur (k = 20 W/m²·K)</option>
+          </select>
+        </label>
+        <label>Température ambiante <span class="unite">°C</span>
+          <input type="number" id="ec-ta" value="25" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Puissance dissipée en chaleur</span>
+          <span class="resultat-valeur" id="ec-res">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Température d'équilibre de l'huile</span>
+          <span class="resultat-valeur" id="ec-res-t">—</span>
+        </div>
+        <p class="calc-note" id="ec-note"></p>
+        <p class="calc-note" id="ec-verdict"></p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Toute la pression perdue sans produire de mouvement se retrouve en chaleur dans l'huile. Un limiteur de pression qui décharge en permanence est un vrai radiateur : c'est la première cause d'huile qui chauffe sur une installation.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>La surface d'échange est estimée à partir d'un réservoir approximé cubique : affinez-la si vous connaissez la géométrie réelle, et n'oubliez pas que les tuyauteries participent aussi à l'évacuation. Au-delà d'environ 60 °C, la durée de vie de l'huile est approximativement divisée par deux tous les 10 °C supplémentaires, et la viscosité chute — croisez ce résultat avec le calculateur de viscosité pour vérifier qu'il reste du film d'huile à la température d'équilibre.</p>
+        </details>
       </section>
 
     </div>
@@ -432,6 +812,28 @@ const sommaire = [
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: #51606b;
+  }
+  .calc-sommaire-tous {
+    display: block;
+    font-family: var(--font-texte);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--color-anthracite);
+    text-decoration: none;
+    background: var(--color-gris-clair);
+    border: 1px solid var(--color-gris-bordure);
+    border-left: 3px solid var(--color-bleu-hydraulique);
+    border-radius: 4px;
+    padding: 0.55em 0.7em;
+    margin-bottom: 1.1rem;
+  }
+  .calc-sommaire-tous:hover {
+    border-left-color: var(--color-ambre);
+  }
+  .calc-sommaire-tous.actif {
+    color: var(--color-bleu-hydraulique);
+    background: var(--color-formule-fond);
+    border-left-color: var(--color-ambre);
   }
   .calc-sommaire > ul {
     list-style: none;
@@ -489,12 +891,33 @@ const sommaire = [
     max-width: 760px;
     color: #51606b;
   }
+  .calc-retour {
+    margin: 1.2rem 0 0;
+  }
+  .calc-retour a {
+    display: inline-block;
+    font-family: var(--font-texte);
+    font-size: var(--taille-petit);
+    font-weight: 600;
+    color: var(--color-bleu-hydraulique);
+    text-decoration: none;
+  }
+  .calc-retour a:hover {
+    color: var(--color-ambre);
+  }
   .calc-grille {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
     gap: 1.4rem;
     margin: 2rem 0;
     align-items: start;
+  }
+  .calc-grille--unique {
+    grid-template-columns: minmax(0, 640px);
+    justify-content: center;
+  }
+  .calc-grille--unique .calc-carte--large {
+    grid-column: auto;
   }
   .calc-carte {
     background: var(--color-blanc);
@@ -642,6 +1065,33 @@ const sommaire = [
   .calc-huile-info:empty {
     display: none;
   }
+  .calc-plus {
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--color-gris-bordure);
+  }
+  .calc-plus summary {
+    cursor: pointer;
+    font-family: var(--font-texte);
+    font-weight: 600;
+    font-size: var(--taille-petit);
+    color: var(--color-bleu-hydraulique);
+  }
+  .calc-plus summary:hover {
+    color: var(--color-ambre);
+  }
+  .calc-plus[open] summary {
+    margin-bottom: 0.5rem;
+  }
+  .calc-plus p {
+    margin: 0.5rem 0 0;
+    font-size: var(--taille-petit);
+    color: #51606b;
+  }
+  .calc-plus .pastille-niveau {
+    margin-right: 0.5em;
+    vertical-align: middle;
+  }
   .calc-huile-info h3 {
     margin: 0 0 0.3rem;
     font-family: var(--font-texte);
@@ -698,7 +1148,8 @@ const sommaire = [
 </style>
 
 <script>
-  import { huiles, infosFamille } from "../data/huiles-hydrauliques.js";
+  import { infosFamille } from "../data/huiles-hydrauliques.js";
+  import { catalogue, libelleHuile } from "../data/huiles-standard.js";
 
   const fmtFr = (valeur: number, decimales = 1) =>
     new Intl.NumberFormat("fr-FR", {
@@ -734,6 +1185,61 @@ const sommaire = [
 
   /** Surface d'un disque en cm² à partir d'un diamètre en mm. */
   const surfaceCm2 = (diametreMm: number) => (Math.PI * (diametreMm / 10) ** 2) / 4;
+
+  /** Section d'un tube en m² à partir d'un diamètre en mm. */
+  const sectionM2 = (diametreMm: number) => (Math.PI * (diametreMm / 1000) ** 2) / 4;
+
+  /**
+   * Surface d'échange d'un réservoir (m²) à partir de sa contenance en litres,
+   * en l'assimilant à un cube. Estimation partagée par les deux calculateurs
+   * thermiques de la page, pour qu'ils ne donnent pas deux réponses
+   * différentes sur le même réservoir.
+   */
+  const surfaceReservoir = (volumeLitres: number) => 6 * (volumeLitres / 1000) ** (2 / 3);
+
+  /**
+   * Viscosité cinématique (cSt) à la température voulue, par l'équation de
+   * Walther / ASTM D341 : W(ν) = log10(log10(ν + 0,7)) est linéaire en
+   * log10(T en kelvins). Avec les deux points de la fiche technique (40 °C et
+   * 100 °C), c'est la pente réelle de l'huile qui est utilisée — donc son VI
+   * réel, et non une valeur moyenne. Renvoie NaN si les données sont
+   * inutilisables (viscosités incohérentes, température trop basse).
+   */
+  const viscositeA = (n40: number, n100: number, tC: number): number => {
+    if (!(n40 > 2 && n100 > 0.5 && n40 > n100 && Number.isFinite(tC) && tC > -30)) return NaN;
+    const t40 = Math.log10(40 + 273.15), t100 = Math.log10(100 + 273.15);
+    const w = (nu: number) => Math.log10(Math.log10(nu + 0.7));
+    const pente = (w(n40) - w(n100)) / (t100 - t40);
+    return 10 ** 10 ** (w(n40) - pente * (Math.log10(tC + 273.15) - t40)) - 0.7;
+  };
+
+  /**
+   * Masse volumique (kg/m³) à la température voulue, par famille d'huile.
+   * Valeurs à 15 °C relevées sur les fiches techniques des fabricants ; les
+   * esters biodégradables sont sensiblement plus denses que les minérales.
+   * La dilatation thermique retire environ 0,65 kg/m³ par degré.
+   */
+  const massesVolumiques: Record<string, number> = {
+    HM: 875,
+    HV: 870,
+    HEES: 920,
+    "Turbine/UTTO": 870,
+  };
+  const masseVolumiqueA = (famille: string, tC: number) =>
+    (massesVolumiques[famille] ?? 870) - 0.65 * (tC - 15);
+
+  /**
+   * Verdict sur le régime d'écoulement dans un orifice calibré. Le coefficient
+   * de débit Cd n'est constant qu'en régime turbulent : en dessous, le débit
+   * réel devient dépendant de la viscosité et la formule perd sa validité.
+   */
+  const verdictOrifice = (re: number) => {
+    if (re >= 1000)
+      return "✅ Régime turbulent dans l'orifice : le coefficient de débit est stable, le calcul est fiable.";
+    if (re >= 100)
+      return "🟠 Régime transitoire : le coefficient de débit réel est plus faible qu'annoncé, le débit obtenu sera inférieur au calcul. Prévoyez un réglage au banc.";
+    return "⚠️ Régime visqueux : à cette viscosité, le débit dépend surtout de l'huile et non plus de la seule section. La formule ne s'applique plus — refaites le calcul à la température réelle de service.";
+  };
 
   const calculer = () => {
     // 1. Puissance hydraulique : P = Q × p / 600
@@ -834,19 +1340,10 @@ const sommaire = [
     }
 
     // 8. Viscosité–température (équation de Walther / ASTM D341)
-    // W(ν) = log10(log10(ν + 0,7)) est linéaire en log10(T en kelvins). Avec les
-    // deux points de la fiche technique (40 °C et 100 °C), la pente réelle de
-    // l'huile (donc son VI réel) est utilisée : le calcul est exact.
     const viHuileSelect = document.getElementById("vi-huile") as HTMLSelectElement | null;
     const viHuileValide = !!viHuileSelect?.selectedOptions[0] && !viHuileSelect.selectedOptions[0].disabled;
-    const viN1 = lire("vi-n1"), viN2 = lire("vi-n2");
-    const viT = lireLibre("vi-t");
-    const t40 = Math.log10(40 + 273.15), t100 = Math.log10(100 + 273.15);
-    const w = (nu: number) => Math.log10(Math.log10(nu + 0.7));
-    if (viHuileValide && viN1 > 2 && viN2 > 0.5 && viN1 > viN2 && Number.isFinite(viT) && viT > -30) {
-      const pente = (w(viN1) - w(viN2)) / (t100 - t40);
-      const lt = Math.log10(viT + 273.15);
-      const nu = 10 ** 10 ** (w(viN1) - pente * (lt - t40)) - 0.7;
+    const nu = viscositeA(lire("vi-n1"), lire("vi-n2"), lireLibre("vi-t"));
+    if (viHuileValide && Number.isFinite(nu)) {
       afficher("vi-res", `${fmtFr(nu, nu < 100 ? 1 : 0)} cSt`);
       let verdict = "";
       if (nu < 10) verdict = "⚠️ Viscosité trop faible : film d'huile insuffisant, usure et fuites internes accrues. L'huile est trop chaude ou trop fluide.";
@@ -906,22 +1403,202 @@ const sommaire = [
       afficher("ac-res-adia", "—");
       afficher("ac-verdict", "");
     }
+
+    // 12. Vitesse d'un moteur hydraulique : N = Q × 1000 × ηv / Cyl
+    const moQ = lire("mo-q"), moCyl = lire("mo-cyl"), moRv = lire("mo-rv");
+    afficher(
+      "mo-res",
+      moQ >= 0 && moCyl > 0 && moRv >= 0
+        ? `${fmtFr((moQ * 1000 * (moRv / 100)) / moCyl, 0)} tr/min`
+        : "—"
+    );
+
+    // 13. Pertes de charge (Darcy-Weisbach) : Δp = λ × (L/d) × ρ v² / 2
+    // λ = 64/Re en laminaire ; corrélation de Blasius au-delà, valable jusqu'à
+    // environ Re = 100 000 pour un tube lisse.
+    const peQ = lire("pe-q"), peD = lire("pe-d"), peL = lire("pe-l");
+    const peNu = lire("pe-nu"), peRho = lire("pe-rho");
+    if (peQ > 0 && peD > 0 && peL >= 0 && peNu > 0 && peRho > 0) {
+      const vPe = peQ / 60000 / sectionM2(peD);
+      const rePe = (1000 * vPe * peD) / peNu;
+      const laminaire = rePe < 2300;
+      const lambda = laminaire ? 64 / rePe : 0.3164 / rePe ** 0.25;
+      const dpBar = (lambda * (peL / (peD / 1000)) * peRho * vPe ** 2) / 2 / 1e5;
+      afficher("pe-res", `${fmtFr(dpBar, 2)} bar`);
+      afficher("pe-res-p", `${fmtFr((peQ * dpBar) / 600, 3)} kW`);
+      afficher(
+        "pe-note",
+        `Vitesse ${fmtFr(vPe, 2)} m/s · Re ${fmtFr(rePe, 0)} · régime ${laminaire ? "laminaire" : "turbulent"} · λ = ${fmtFr(lambda, 4)}.`
+      );
+      let verdictPe = "";
+      if (dpBar > 10) verdictPe = "⚠️ Perte de charge très élevée : augmentez le diamètre ou raccourcissez la ligne, sinon l'échauffement sera important.";
+      else if (dpBar > 3) verdictPe = "🟠 Perte de charge notable : acceptable sur une ligne de pression courte, à revoir sur un retour ou une aspiration.";
+      else verdictPe = "✅ Perte de charge modérée.";
+      if (rePe > 100000) verdictPe += " Attention : au-delà de Re = 100 000, la corrélation de Blasius sous-estime les pertes.";
+      afficher("pe-verdict", verdictPe);
+    } else {
+      afficher("pe-res", "—");
+      afficher("pe-res-p", "—");
+      afficher("pe-note", "");
+      afficher("pe-verdict", "");
+    }
+
+    // 14. Diamètre de gicleur : Q = Cd × A × √(2Δp/ρ), inversé pour trouver A.
+    // La viscosité de l'huile choisie à la température saisie sert à vérifier
+    // que l'on reste en régime turbulent, seul cas où Cd est constant.
+    const giQ = lire("gi-q"), giDp = lire("gi-dp"), giT = lireLibre("gi-t");
+    const giCdEl = document.getElementById("gi-cd") as HTMLSelectElement | null;
+    const giCd = giCdEl ? parseFloat(giCdEl.value) : NaN;
+    const giSelect = document.getElementById("gi-huile") as HTMLSelectElement | null;
+    const giOption = giSelect?.selectedOptions[0];
+    const giFam = giOption && !giOption.disabled ? giOption.dataset.fam ?? "" : "";
+    const giNu = viscositeA(lire("gi-n1"), lire("gi-n2"), giT);
+    if (giQ > 0 && giDp > 0 && giCd > 0 && giFam && Number.isFinite(giNu) && giNu > 0) {
+      const rhoGi = masseVolumiqueA(giFam, giT);
+      const vTheo = Math.sqrt((2 * giDp * 1e5) / rhoGi);
+      const aireGi = giQ / 60000 / (giCd * vTheo);
+      const dGi = Math.sqrt((4 * aireGi) / Math.PI) * 1000;
+      const vGi = giCd * vTheo;
+      const reGi = (1000 * vGi * dGi) / giNu;
+      afficher("gi-res", `${fmtFr(dGi, 2)} mm`);
+      afficher("gi-res-v", `${fmtFr(vGi, 0)} m/s`);
+      afficher(
+        "gi-fiche-calc",
+        `Huile à ${fmtFr(giT, 0)} °C : ν = ${fmtFr(giNu, 1)} cSt · ρ ≈ ${fmtFr(rhoGi, 0)} kg/m³ · Re dans l'orifice ≈ ${fmtFr(reGi, 0)}.`
+      );
+      afficher("gi-verdict", verdictOrifice(reGi));
+      afficher(
+        "gi-alerte",
+        dGi < 0.3
+          ? "⚠️ Diamètre inférieur à 0,3 mm : très sensible au colmatage. Prévoyez une filtration fine en amont, ou répartissez le débit sur plusieurs orifices."
+          : ""
+      );
+    } else {
+      afficher("gi-res", "—");
+      afficher("gi-res-v", "—");
+      afficher("gi-fiche-calc", "");
+      afficher("gi-verdict", "");
+      afficher("gi-alerte", "");
+    }
+
+    // 15. Débit à travers un orifice existant : Q = Cd × A × √(2Δp/ρ)
+    const orD = lire("or-d"), orDp = lire("or-dp");
+    const orNu = lire("or-nu"), orRho = lire("or-rho");
+    const orCdEl = document.getElementById("or-cd") as HTMLSelectElement | null;
+    const orCd = orCdEl ? parseFloat(orCdEl.value) : NaN;
+    if (orD > 0 && orDp > 0 && orNu > 0 && orRho > 0 && orCd > 0) {
+      const aireOr = sectionM2(orD);
+      const vOr = orCd * Math.sqrt((2 * orDp * 1e5) / orRho);
+      const qOr = vOr * aireOr * 60000;
+      const reOr = (1000 * vOr * orD) / orNu;
+      afficher("or-res", `${fmtFr(qOr, 2)} L/min`);
+      afficher("or-res-v", `${fmtFr(vOr, 0)} m/s`);
+      afficher("or-note", `Section de passage ${fmtFr(aireOr * 1e6, 3)} mm² · Re dans l'orifice ≈ ${fmtFr(reOr, 0)}.`);
+      afficher("or-verdict", verdictOrifice(reOr));
+    } else {
+      afficher("or-res", "—");
+      afficher("or-res-v", "—");
+      afficher("or-note", "");
+      afficher("or-verdict", "");
+    }
+
+    // 16. Bilan thermique global : la puissance perdue par l'ensemble du groupe
+    // (1 − rendement global), ou une valeur mesurée, est évacuée par les parois
+    // du réservoir. Au-delà de ce que celles-ci encaissent, il faut un échangeur.
+    const btModeEl = document.getElementById("bt-mode") as HTMLSelectElement | null;
+    const btDirect = btModeEl?.value === "direct";
+    const btQ = lire("bt-q"), btP = lire("bt-p"), btEta = lire("bt-eta");
+    const btV = lire("bt-v"), btTamb = lireLibre("bt-tamb"), btTcible = lireLibre("bt-tcible");
+    const btKEl = document.getElementById("bt-k") as HTMLSelectElement | null;
+    const btK = btKEl ? parseFloat(btKEl.value) : NaN;
+    // Puissance dissipée en watts, selon le mode choisi.
+    const btPdiss = btDirect
+      ? lire("bt-pdiss") * 1000
+      : btQ > 0 && btP > 0 && btEta > 0 && btEta < 100
+        ? ((btQ * btP) / 600) * 1000 * (1 - btEta / 100)
+        : NaN;
+    if (
+      Number.isFinite(btPdiss) && btPdiss >= 0 && btV > 0 && btK > 0 &&
+      Number.isFinite(btTamb) && Number.isFinite(btTcible)
+    ) {
+      const surfaceBt = surfaceReservoir(btV);
+      const evacuation = btK * surfaceBt; // W par degré au-dessus de l'ambiante
+      const tEqBt = btTamb + btPdiss / evacuation;
+      const pEchangeur = btPdiss - evacuation * (btTcible - btTamb);
+      afficher("bt-res-pdiss", `${fmtFr(btPdiss / 1000, 2)} kW`);
+      afficher("bt-res-teq", `${fmtFr(tEqBt, 0)} °C`);
+      afficher("bt-res-echangeur", pEchangeur > 0 ? `${fmtFr(pEchangeur / 1000, 2)} kW` : "aucun");
+      afficher(
+        "bt-note",
+        `Surface d'échange estimée ${fmtFr(surfaceBt, 1)} m² · le réservoir évacue ${fmtFr(evacuation, 0)} W par degré au-dessus de l'ambiante.`
+      );
+      if (btTcible <= btTamb) {
+        afficher("bt-verdict", "⚠️ La température visée doit être supérieure à la température ambiante : le réservoir ne peut pas refroidir l'huile en dessous de l'air qui l'entoure.");
+      } else if (pEchangeur <= 0) {
+        afficher(
+          "bt-verdict",
+          `✅ L'huile se stabilise vers ${fmtFr(tEqBt, 0)} °C, sous la cible de ${fmtFr(btTcible, 0)} °C : le réservoir suffit, pas d'échangeur nécessaire.`
+        );
+      } else {
+        afficher(
+          "bt-verdict",
+          `⚠️ Sans échangeur, l'huile monterait vers ${fmtFr(tEqBt, 0)} °C. Pour tenir ${fmtFr(btTcible, 0)} °C, prévoyez un refroidisseur d'au moins ${fmtFr(pEchangeur / 1000, 2)} kW (${fmtFr(pEchangeur, 0)} W).`
+        );
+      }
+    } else {
+      afficher("bt-res-pdiss", "—");
+      afficher("bt-res-teq", "—");
+      afficher("bt-res-echangeur", "—");
+      afficher("bt-note", "");
+      afficher("bt-verdict", "");
+    }
+
+    // 17. Échauffement : P = Q × Δp / 600, puis équilibre thermique du
+    // réservoir P = k × S × ΔT.
+    const ecQ = lire("ec-q"), ecDp = lire("ec-dp"), ecV = lire("ec-v");
+    const ecTa = lireLibre("ec-ta");
+    const ecKEl = document.getElementById("ec-k") as HTMLSelectElement | null;
+    const ecK = ecKEl ? parseFloat(ecKEl.value) : NaN;
+    if (ecQ >= 0 && ecDp >= 0 && ecV > 0 && ecK > 0 && Number.isFinite(ecTa)) {
+      const pKw = (ecQ * ecDp) / 600;
+      const surface = surfaceReservoir(ecV);
+      const deltaT = (pKw * 1000) / (ecK * surface);
+      const tEq = ecTa + deltaT;
+      afficher("ec-res", `${fmtFr(pKw, 2)} kW`);
+      afficher("ec-res-t", `${fmtFr(tEq, 0)} °C`);
+      afficher(
+        "ec-note",
+        `Surface d'échange estimée ${fmtFr(surface, 1)} m² · élévation de ${fmtFr(deltaT, 0)} °C au-dessus de l'ambiante.`
+      );
+      let verdictEc = "";
+      if (tEq <= 50) verdictEc = "✅ Le réservoir évacue seul cette chaleur : pas de refroidisseur nécessaire.";
+      else if (tEq <= 60) verdictEc = "🟠 Température de service haute mais tenable. Surveillez-la en été et vérifiez la viscosité atteinte.";
+      else if (tEq <= 70) verdictEc = "⚠️ Trop chaud : vieillissement accéléré de l'huile et des joints. Un échangeur est conseillé.";
+      else if (tEq <= 90) verdictEc = "⚠️ Un échangeur est indispensable : à cette température, l'huile s'oxyde vite et le film lubrifiant devient insuffisant.";
+      else verdictEc = "⚠️ Cette température d'équilibre est théorique : en pratique elle n'est jamais atteinte, car l'huile et les joints se dégradent bien avant. À retenir simplement : le réservoir seul est très loin de suffire, un échangeur dimensionné pour la puissance dissipée ci-dessus est obligatoire.";
+      afficher("ec-verdict", verdictEc);
+    } else {
+      afficher("ec-res", "—");
+      afficher("ec-res-t", "—");
+      afficher("ec-note", "");
+      afficher("ec-verdict", "");
+    }
   };
 
-  // Sélecteur d'huile du calculateur de viscosité : remplit automatiquement
-  // les deux champs de viscosité (40 °C / 100 °C), affiche le VI, la famille,
-  // et une fiche d'information par famille (domaine, avantages, points de
-  // vigilance, compatibilité joints) — pertinente pour définir un système.
-  const majHuile = () => {
-    const select = document.getElementById("vi-huile") as HTMLSelectElement | null;
-    const champN1 = document.getElementById("vi-n1") as HTMLInputElement | null;
-    const champN2 = document.getElementById("vi-n2") as HTMLInputElement | null;
+  // Sélecteur d'huile, partagé par le calculateur de viscosité (préfixe « vi »)
+  // et celui du diamètre de gicleur (préfixe « gi »). Il remplit les deux champs
+  // de viscosité (40 °C / 100 °C) que les calculs utilisent, et affiche la fiche
+  // technique. La fiche détaillée par famille (domaine, avantages, points de
+  // vigilance, joints) n'existe que sur la carte viscosité : elle n'est remplie
+  // que si le conteneur correspondant est présent.
+  const majHuile = (p = "vi") => {
+    const select = document.getElementById(`${p}-huile`) as HTMLSelectElement | null;
+    const champN1 = document.getElementById(`${p}-n1`) as HTMLInputElement | null;
+    const champN2 = document.getElementById(`${p}-n2`) as HTMLInputElement | null;
     const option = select?.selectedOptions[0];
     if (!select || !champN1 || !champN2 || !option || option.disabled) {
-      afficher("vi-fiche", "");
-      afficher("vi-res", "—");
-      afficher("vi-verdict", "");
-      afficherHTML("vi-info", "");
+      afficher(`${p}-fiche`, "");
+      afficherHTML(`${p}-info`, "");
       return;
     }
     const [n40, n100] = select.value.split("|").map(Number);
@@ -930,13 +1607,19 @@ const sommaire = [
     const vi = option.dataset.vi;
     const fam = option.dataset.fam ?? "";
     const info = infosFamille[fam as keyof typeof infosFamille];
+    // Les huiles « Standard » ne sont pas un produit du commerce : le dire, pour
+    // qu'on ne les prenne pas pour une fiche technique de fabricant.
+    const echantillon = option.dataset.echantillon;
+    const valeurs = `${fmtFr(n40, 1)} cSt à 40 °C · ${fmtFr(n100, 2)} cSt à 100 °C · VI ${vi} — ${info?.label ?? fam}`;
     afficher(
-      "vi-fiche",
-      `Fiche technique : ${fmtFr(n40, 1)} cSt à 40 °C · ${fmtFr(n100, 2)} cSt à 100 °C · VI ${vi} — ${info?.label ?? fam}.`
+      `${p}-fiche`,
+      echantillon
+        ? `Valeurs représentatives : ${valeurs}. Huile générique, établie d'après ${echantillon} huiles réelles du catalogue de ce type et de ce grade — à remplacer par la fiche technique du fabricant dès que la marque est connue.`
+        : `Fiche technique : ${valeurs}.`
     );
-    if (info) {
+    if (info && document.getElementById(`${p}-info`)) {
       afficherHTML(
-        "vi-info",
+        `${p}-info`,
         `
         <p><span class="calc-huile-badge">Domaine d'application</span>${info.domaine}</p>
         <div class="calc-huile-avinc">
@@ -954,22 +1637,22 @@ const sommaire = [
         `
       );
     } else {
-      afficherHTML("vi-info", "");
+      afficherHTML(`${p}-info`, "");
     }
   };
 
   // Reconstruit la liste déroulante « Huile » à partir des trois filtres
   // (marque, type, viscosité à 40 °C), en conservant la sélection en cours
   // si elle correspond toujours aux filtres actifs.
-  const construireOptionsHuiles = () => {
-    const select = document.getElementById("vi-huile") as HTMLSelectElement | null;
+  const construireOptionsHuiles = (p = "vi") => {
+    const select = document.getElementById(`${p}-huile`) as HTMLSelectElement | null;
     if (!select) return;
     const valeurAvant = select.value;
-    const fMarque = (document.getElementById("vi-filtre-marque") as HTMLSelectElement | null)?.value ?? "";
-    const fType = (document.getElementById("vi-filtre-type") as HTMLSelectElement | null)?.value ?? "";
-    const fVg = (document.getElementById("vi-filtre-vg") as HTMLSelectElement | null)?.value ?? "";
+    const fMarque = (document.getElementById(`${p}-filtre-marque`) as HTMLSelectElement | null)?.value ?? "";
+    const fType = (document.getElementById(`${p}-filtre-type`) as HTMLSelectElement | null)?.value ?? "";
+    const fVg = (document.getElementById(`${p}-filtre-vg`) as HTMLSelectElement | null)?.value ?? "";
 
-    const filtrees = huiles.filter(
+    const filtrees = catalogue.filter(
       (h) =>
         (!fMarque || h.marque === fMarque) &&
         (!fType || h.fam === fType) &&
@@ -977,8 +1660,8 @@ const sommaire = [
     );
 
     afficher(
-      "vi-nb-resultats",
-      filtrees.length === huiles.length
+      `${p}-nb-resultats`,
+      filtrees.length === catalogue.length
         ? ""
         : `${filtrees.length} huile${filtrees.length > 1 ? "s" : ""} correspondant aux filtres.`
     );
@@ -1004,7 +1687,8 @@ const sommaire = [
           opt.value = `${h.n40}|${h.n100}`;
           opt.dataset.vi = String(h.vi);
           opt.dataset.fam = h.fam;
-          opt.textContent = `${h.nom} (VG ${h.vg} · VI ${h.vi})`;
+          if (h.echantillon) opt.dataset.echantillon = String(h.echantillon);
+          opt.textContent = libelleHuile(h);
           groupe.appendChild(opt);
         });
       select.appendChild(groupe);
@@ -1014,29 +1698,86 @@ const sommaire = [
     select.value = optionConservee ? valeurAvant : select.options[0].value;
   };
 
+  // Chaque filtre et chaque liste d'huiles porte un data-prefixe qui indique le
+  // calculateur auquel il appartient (« vi » viscosité, « gi » gicleur).
   document.querySelectorAll(".calc-filtre").forEach((champ) => {
     champ.addEventListener("change", () => {
-      construireOptionsHuiles();
-      majHuile();
+      const p = (champ as HTMLElement).dataset.prefixe ?? "vi";
+      construireOptionsHuiles(p);
+      majHuile(p);
       calculer();
     });
   });
 
-  document.getElementById("vi-huile")?.addEventListener("change", () => {
-    majHuile();
-    calculer();
+  document.querySelectorAll(".calc-huile-select").forEach((champ) => {
+    champ.addEventListener("change", () => {
+      majHuile((champ as HTMLElement).dataset.prefixe ?? "vi");
+      calculer();
+    });
   });
 
-  document.querySelectorAll(".calc-carte input, .calc-carte select:not(.calc-filtre)").forEach((champ) => {
-    champ.addEventListener("input", calculer);
-    champ.addEventListener("change", calculer);
-  });
-  majHuile();
+  document
+    .querySelectorAll(".calc-carte input, .calc-carte select:not(.calc-filtre):not(.calc-huile-select)")
+    .forEach((champ) => {
+      champ.addEventListener("input", calculer);
+      champ.addEventListener("change", calculer);
+    });
+  // Bilan thermique : n'afficher que les champs du mode de saisie choisi —
+  // estimation par le rendement, ou puissance dissipée déjà connue par mesure.
+  const majModeBilan = () => {
+    const direct = (document.getElementById("bt-mode") as HTMLSelectElement | null)?.value === "direct";
+    document.getElementById("bt-champs-rendement")?.toggleAttribute("hidden", direct);
+    document.getElementById("bt-champs-direct")?.toggleAttribute("hidden", !direct);
+  };
+  document.getElementById("bt-mode")?.addEventListener("change", majModeBilan);
+
+  majHuile("vi");
+  majHuile("gi");
+  majModeBilan();
   calculer();
 
-  // Sommaire : met en surbrillance le calculateur actuellement visible à l'écran.
+  // Sommaire cliquable : au lieu d'un simple ancrage, chaque lien filtre
+  // l'affichage pour ne montrer QUE le calculateur choisi (plus lisible sur un
+  // sujet précis). « Tous les calculateurs » revient à la grille complète.
+  // L'état choisi vit dans l'URL (#calc-xxx) pour rester partageable et
+  // fonctionner avec le bouton retour du navigateur.
+  const TOUS = "tous";
+  const grille = document.querySelector(".calc-grille");
+  const boutonRetour = document.getElementById("calc-retour");
+  const cartes = Array.from(document.querySelectorAll(".calc-carte[id]"));
+  let modeTous = true;
+
+  const appliquerFiltre = (cible: string) => {
+    const carteCible = cible !== TOUS ? document.getElementById(cible) : null;
+    modeTous = !carteCible;
+    cartes.forEach((carte) => {
+      carte.hidden = !modeTous && carte !== carteCible;
+    });
+    grille?.classList.toggle("calc-grille--unique", !modeTous);
+    boutonRetour?.toggleAttribute("hidden", modeTous);
+    document.querySelectorAll(".calc-sommaire a[data-cible]").forEach((lien) => {
+      const cibleLien = (lien as HTMLElement).dataset.cible;
+      lien.classList.toggle("actif", modeTous ? cibleLien === TOUS : cibleLien === cible);
+    });
+  };
+
+  document.querySelectorAll("a[data-cible]").forEach((lien) => {
+    lien.addEventListener("click", (evenement) => {
+      evenement.preventDefault();
+      const cible = (lien as HTMLElement).dataset.cible ?? TOUS;
+      history.pushState(null, "", cible === TOUS ? location.pathname + location.search : `#${cible}`);
+      appliquerFiltre(cible);
+      document.querySelector(".calc-contenu")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+  window.addEventListener("popstate", () => appliquerFiltre(location.hash.slice(1) || TOUS));
+  appliquerFiltre(location.hash.slice(1) || TOUS);
+
+  // En mode « Tous les calculateurs » : met en surbrillance dans le sommaire
+  // celui actuellement visible à l'écran pendant le défilement.
   const observateur = new IntersectionObserver(
     (entrees) => {
+      if (!modeTous) return;
       entrees.forEach((entree) => {
         const lien = document.querySelector(`.calc-sommaire a[data-cible="${entree.target.id}"]`);
         lien?.classList.toggle("actif", entree.isIntersecting);
@@ -1044,5 +1785,5 @@ const sommaire = [
     },
     { rootMargin: "-25% 0px -65% 0px" }
   );
-  document.querySelectorAll(".calc-carte[id]").forEach((carte) => observateur.observe(carte));
+  cartes.forEach((carte) => observateur.observe(carte));
 </script>
