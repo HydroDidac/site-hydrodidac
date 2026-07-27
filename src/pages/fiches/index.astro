@@ -14,25 +14,102 @@ const sections = MODULES.map((module) => ({
 }));
 ---
 <Layout title="Fiches — HydroDidac">
-  <main id="contenu" style="max-width: 760px; margin: 0 auto; padding: 2rem 1rem;">
+  <main id="contenu" class="fiches-page">
     <h1>Fiches didactiques</h1>
-    {sections.map(({ module, groupes }) => (
-      <section id={`module-${module.slug}`} style="margin-top: 2rem;">
-        <h2>{module.numero} · {module.nom}</h2>
-        {groupes.length > 0 ? (
-          groupes.map((groupe) => (
-            <a class="carte-fiche" href={`/fiches/${groupe.slug}`}>
-              <span class="pastille-niveau debutant">
-                {groupe.versions.map((v) => niveauLabel[v.data.niveau]).join(" ")}
-              </span>
-              <h3>{groupe.titre}</h3>
-              <p>{groupe.resume}</p>
-            </a>
-          ))
-        ) : (
-          <p style="color: #51606b; font-size: var(--taille-petit);">Aucune fiche publiée pour le moment dans ce module.</p>
-        )}
-      </section>
-    ))}
+
+    <div class="fiches-layout">
+      <nav class="fiches-sommaire no-print" aria-label="Sommaire des fiches">
+        <p class="fiches-sommaire-titre">Sommaire</p>
+        <a href="#toutes" data-cible="toutes" class="fiches-sommaire-tous actif">
+          📋 Toutes les fiches <span class="fiches-sommaire-compte">{groupes.length}</span>
+        </a>
+        <ul>
+          {sections.map(({ module, groupes }) => (
+            <li>
+              <a
+                href={`#module-${module.slug}`}
+                data-cible={`module-${module.slug}`}
+                class={groupes.length === 0 ? "fiches-sommaire-vide" : ""}
+              >
+                <span class="fiches-sommaire-numero">{module.numero}</span>
+                <span>{module.nom}</span>
+                <span class="fiches-sommaire-compte">{groupes.length}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="fiches-contenu">
+        {sections.map(({ module, groupes }) => (
+          <section id={`module-${module.slug}`} data-section-module={module.slug} style="margin-top: 2rem;">
+            <h2>{module.numero} · {module.nom}</h2>
+            {groupes.length > 0 ? (
+              <div class="cartes">
+                {groupes.map((groupe) => (
+                  <a class="carte-fiche" href={`/fiches/${groupe.slug}`}>
+                    <span class="pastille-niveau debutant">
+                      {groupe.versions.map((v) => niveauLabel[v.data.niveau]).join(" ")}
+                    </span>
+                    <h3>{groupe.titre}</h3>
+                    <p>{groupe.resume}</p>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p style="color: #51606b; font-size: var(--taille-petit);">Aucune fiche publiée pour le moment dans ce module.</p>
+            )}
+          </section>
+        ))}
+      </div>
+    </div>
   </main>
+
+  <script>
+    // Sommaire cliquable : au lieu d'un simple ancrage, chaque lien filtre
+    // l'affichage pour ne montrer QUE le module choisi (plus lisible sur une
+    // catégorie précise). « Toutes les fiches » revient à la liste complète.
+    // L'état choisi vit dans l'URL (#module-xxx) pour rester partageable et
+    // fonctionner avec le bouton retour du navigateur.
+    const TOUS = "toutes";
+    const sections = Array.from(document.querySelectorAll<HTMLElement>("[data-section-module]"));
+    let modeTous = true;
+
+    const appliquerFiltre = (cible: string) => {
+      const sectionCible = cible !== TOUS ? document.getElementById(cible) : null;
+      modeTous = !sectionCible;
+      sections.forEach((section) => {
+        section.hidden = !modeTous && section !== sectionCible;
+      });
+      document.querySelectorAll<HTMLElement>(".fiches-sommaire [data-cible]").forEach((lien) => {
+        const cibleLien = lien.dataset.cible;
+        lien.classList.toggle("actif", modeTous ? cibleLien === TOUS : cibleLien === cible);
+      });
+    };
+
+    document.querySelectorAll<HTMLElement>("a[data-cible]").forEach((lien) => {
+      lien.addEventListener("click", (evenement) => {
+        evenement.preventDefault();
+        const cible = lien.dataset.cible ?? TOUS;
+        history.pushState(null, "", cible === TOUS ? location.pathname + location.search : `#${cible}`);
+        appliquerFiltre(cible);
+      });
+    });
+    window.addEventListener("popstate", () => appliquerFiltre(location.hash.slice(1) || TOUS));
+    appliquerFiltre(location.hash.slice(1) || TOUS);
+
+    // En mode « Toutes les fiches » : met en surbrillance dans le sommaire
+    // le module actuellement visible à l'écran pendant le défilement.
+    const observateur = new IntersectionObserver(
+      (entrees) => {
+        if (!modeTous) return;
+        entrees.forEach((entree) => {
+          const lien = document.querySelector(`.fiches-sommaire [data-cible="${entree.target.id}"]`);
+          lien?.classList.toggle("actif", entree.isIntersecting);
+        });
+      },
+      { rootMargin: "-25% 0px -65% 0px" }
+    );
+    sections.forEach((section) => observateur.observe(section));
+  </script>
 </Layout>
