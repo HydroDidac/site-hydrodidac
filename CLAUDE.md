@@ -172,7 +172,7 @@ GitHub gratuit (ce qui limite le spam mais reste une friction assumée).
   catalogue d'huiles sur un nouveau calculateur, dupliquer le bloc de filtres
   avec un nouveau préfixe, poser `class="calc-filtre"` / `class="calc-huile-select"`
   et `data-prefixe="<préfixe>"`, plus les champs cachés `<préfixe>-n1` / `-n2`.
-- ✅ Tous les calculateurs de `../SPECS_CALCULATEURS_MANQUANTS.md` sont faits.
+- ✅ Tous les calculateurs de `SPECS_CALCULATEURS.md` sont faits.
   Ce fichier reste la référence des formules retenues, et signale trois points
   en attente d'arbitrage de Damien (unité de la rigidité corrigée, défauts du
   bilan thermique, seuils du thermoplongeur à barillet non chiffrés).
