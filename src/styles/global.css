@@ -760,6 +760,53 @@ figcaption {
   display: none;
 }
 
+/* Encart « Mettre en pratique » en bas d'une fiche : passerelle vers les
+   calculateurs qui appliquent la notion expliquée. */
+.fiche-calculateurs {
+  margin: 2.5rem 0 0;
+  padding: 1.2rem 1.4rem;
+  background: var(--color-gris-clair);
+  border: 1px solid var(--color-gris-bordure);
+  border-left: 4px solid var(--color-ambre);
+  border-radius: 6px;
+}
+.fiche-calculateurs h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.fiche-calculateurs p {
+  margin: 0 0 0.8rem;
+  font-size: var(--taille-petit);
+  color: #51606b;
+}
+.fiche-calculateurs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fiche-calculateurs a {
+  display: inline-block;
+  font-family: var(--font-texte);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-bleu-hydraulique);
+  text-decoration: none;
+  background: var(--color-blanc);
+  border: 1px solid var(--color-gris-bordure);
+  border-radius: 999px;
+  padding: 0.3em 0.85em;
+}
+.fiche-calculateurs a:hover {
+  color: var(--color-blanc);
+  background: var(--color-bleu-hydraulique);
+  border-color: var(--color-bleu-hydraulique);
+}
+
 @media print {
   .no-print {
     display: none !important;

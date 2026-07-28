@@ -5,6 +5,7 @@ import AnimationVerin from "../../components/AnimationVerin.astro";
 import { render } from "astro:content";
 import { getGroupesFiches } from "../../lib/fiches";
 import { getImagesForFiche } from "../../lib/images";
+import { calculateursPourFiche } from "../../data/calculateurs-nav.js";
 
 export async function getStaticPaths() {
   const groupes = await getGroupesFiches();
@@ -16,6 +17,10 @@ export async function getStaticPaths() {
 
 const { groupe } = Astro.props;
 const images = getImagesForFiche(groupe.code);
+
+// Calculateurs qui mettent en pratique la notion expliquée par cette fiche.
+// Déduit automatiquement de la table `fichesLiees` : rien à maintenir ici.
+const calculateurs = calculateursPourFiche(groupe.code);
 
 const niveauInfo: Record<string, { label: string; classe: string }> = {
   debutant: { label: "🟢 Débutant", classe: "debutant" },
@@ -110,6 +115,20 @@ const structuredData = {
           </figure>
         ))}
       </div>
+    )}
+
+    {calculateurs.length > 0 && (
+      <aside class="fiche-calculateurs no-print">
+        <h2>Mettre en pratique</h2>
+        <p>Les calculateurs qui appliquent ce que vous venez de lire :</p>
+        <ul>
+          {calculateurs.map((calculateur) => (
+            <li>
+              <a href={`/calculateurs#${calculateur.id}`}>{calculateur.label}</a>
+            </li>
+          ))}
+        </ul>
+      </aside>
     )}
   </main>
 

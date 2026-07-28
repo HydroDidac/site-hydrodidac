@@ -1,0 +1,239 @@
+---
+// Recherche globale au clavier (Ctrl+K, ⌘K, ou « / »), disponible sur toutes
+// les pages via le Layout. Elle cherche dans les fiches ET les calculateurs.
+//
+// L'index est construit au build et intégré à la page : quelques kilo-octets,
+// aucune requête réseau, ça reste instantané et ça marche hors ligne. Pagefind
+// (utilisé pour la recherche plein texte du contenu) reste complémentaire :
+// ici on ne cherche que des titres, pour aller vite à la bonne page.
+import { getGroupesFiches } from "../lib/fiches";
+import { tousLesCalculateurs } from "../data/calculateurs-nav.js";
+
+const groupes = await getGroupesFiches();
+
+const index = [
+  ...tousLesCalculateurs.map((calculateur) => ({
+    titre: calculateur.label,
+    contexte: `Calculateur · ${calculateur.groupe.replace(/^\S+\s/, "")}`,
+    url: `/calculateurs#${calculateur.id}`,
+    type: "calculateur",
+  })),
+  ...groupes.map((groupe) => ({
+    titre: groupe.titre,
+    contexte: `Fiche ${groupe.code} · ${groupe.module}`,
+    url: `/fiches/${groupe.slug}`,
+    type: "fiche",
+  })),
+];
+---
+
+<div class="recherche-fond no-print" id="recherche-fond" hidden>
+  <div class="recherche-boite" role="dialog" aria-modal="true" aria-label="Recherche">
+    <input
+      type="search"
+      id="recherche-champ"
+      placeholder="Rechercher une fiche ou un calculateur…"
+      autocomplete="off"
+      aria-controls="recherche-resultats"
+    />
+    <ul id="recherche-resultats" class="recherche-resultats"></ul>
+    <p class="recherche-aide">
+      <kbd>↑</kbd><kbd>↓</kbd> naviguer · <kbd>Entrée</kbd> ouvrir · <kbd>Échap</kbd> fermer
+    </p>
+  </div>
+</div>
+
+<script define:vars={{ index }}>
+  const fond = document.getElementById("recherche-fond");
+  const champ = document.getElementById("recherche-champ");
+  const liste = document.getElementById("recherche-resultats");
+  let selection = 0;
+
+  // Recherche tolérante : on ignore accents et casse, et on exige que tous les
+  // mots tapés soient présents — « visc temp » doit trouver « Viscosité selon
+  // la température ».
+  const normaliser = (texte) =>
+    texte.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+  const chercher = (requete) => {
+    const mots = normaliser(requete).split(/\s+/).filter(Boolean);
+    if (mots.length === 0) return index.slice(0, 8);
+    return index
+      .filter((entree) => {
+        const cible = normaliser(entree.titre + " " + entree.contexte);
+        return mots.every((mot) => cible.includes(mot));
+      })
+      .slice(0, 8);
+  };
+
+  const afficher = () => {
+    const resultats = chercher(champ.value);
+    selection = Math.min(selection, Math.max(resultats.length - 1, 0));
+    liste.innerHTML = "";
+    if (resultats.length === 0) {
+      const vide = document.createElement("li");
+      vide.className = "recherche-vide";
+      vide.textContent = "Aucun résultat";
+      liste.appendChild(vide);
+      return;
+    }
+    resultats.forEach((entree, i) => {
+      const item = document.createElement("li");
+      item.className = i === selection ? "actif" : "";
+      const lien = document.createElement("a");
+      lien.href = entree.url;
+      lien.innerHTML =
+        `<span class="recherche-titre">${entree.titre}</span>` +
+        `<span class="recherche-contexte">${entree.contexte}</span>`;
+      item.appendChild(lien);
+      liste.appendChild(item);
+    });
+  };
+
+  const ouvrir = () => {
+    fond.hidden = false;
+    champ.value = "";
+    selection = 0;
+    afficher();
+    champ.focus();
+  };
+
+  const fermer = () => { fond.hidden = true; };
+
+  const ouvrirSelection = () => {
+    const lien = liste.querySelectorAll("a")[selection];
+    if (!lien) return;
+    const destination = lien.getAttribute("href");
+    fermer();
+    // Même page avec une ancre différente : la navigation ne recharge rien,
+    // c'est l'évènement hashchange qui fait le travail côté calculateurs.
+    window.location.href = destination;
+  };
+
+  document.addEventListener("keydown", (evenement) => {
+    const dansUnChamp = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? "");
+
+    if ((evenement.ctrlKey || evenement.metaKey) && evenement.key.toLowerCase() === "k") {
+      evenement.preventDefault();
+      fond.hidden ? ouvrir() : fermer();
+      return;
+    }
+    if (evenement.key === "/" && fond.hidden && !dansUnChamp) {
+      evenement.preventDefault();
+      ouvrir();
+      return;
+    }
+    if (fond.hidden) return;
+
+    if (evenement.key === "Escape") { fermer(); return; }
+    const nombre = liste.querySelectorAll("a").length;
+    if (evenement.key === "ArrowDown" && nombre) {
+      evenement.preventDefault();
+      selection = (selection + 1) % nombre;
+      afficher();
+    } else if (evenement.key === "ArrowUp" && nombre) {
+      evenement.preventDefault();
+      selection = (selection - 1 + nombre) % nombre;
+      afficher();
+    } else if (evenement.key === "Enter") {
+      evenement.preventDefault();
+      ouvrirSelection();
+    }
+  });
+
+  champ.addEventListener("input", () => { selection = 0; afficher(); });
+  fond.addEventListener("click", (evenement) => {
+    if (evenement.target === fond) fermer();
+  });
+</script>
+
+<style>
+  .recherche-fond {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(28, 43, 54, 0.45);
+    display: flex;
+    justify-content: center;
+    padding: 12vh 1rem 1rem;
+  }
+  .recherche-fond[hidden] {
+    display: none;
+  }
+  .recherche-boite {
+    width: 100%;
+    max-width: 560px;
+    height: fit-content;
+    background: var(--color-blanc);
+    border: 1px solid var(--color-gris-bordure);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(28, 43, 54, 0.25);
+    overflow: hidden;
+  }
+  .recherche-boite input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--color-gris-bordure);
+    padding: 0.9rem 1.1rem;
+    font-family: var(--font-texte);
+    font-size: 1rem;
+    color: var(--color-anthracite);
+  }
+  .recherche-boite input:focus {
+    outline: none;
+    border-bottom-color: var(--color-bleu-hydraulique);
+  }
+  .recherche-resultats {
+    list-style: none;
+    margin: 0;
+    padding: 0.4rem;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  .recherche-resultats li.actif a {
+    background: var(--color-formule-fond);
+  }
+  .recherche-resultats a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+  .recherche-resultats a:hover {
+    background: var(--color-gris-clair);
+  }
+  .recherche-titre {
+    font-family: var(--font-texte);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-anthracite);
+  }
+  .recherche-contexte {
+    font-size: 0.75rem;
+    color: #51606b;
+  }
+  .recherche-vide {
+    padding: 0.8rem;
+    font-size: var(--taille-petit);
+    color: #51606b;
+    text-align: center;
+  }
+  .recherche-aide {
+    margin: 0;
+    padding: 0.5rem 1.1rem;
+    border-top: 1px solid var(--color-gris-bordure);
+    background: var(--color-gris-clair);
+    font-size: 0.72rem;
+    color: #51606b;
+  }
+  .recherche-aide kbd {
+    font-family: var(--font-valeurs);
+    background: var(--color-blanc);
+    border: 1px solid var(--color-gris-bordure);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    margin-right: 0.15em;
+  }
+</style>

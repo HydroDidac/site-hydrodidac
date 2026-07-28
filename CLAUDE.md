@@ -123,18 +123,61 @@ GitHub gratuit (ce qui limite le spam mais reste une friction assumée).
   (40 °C, 100 °C, VI) cohérentes entre elles. Le module exporte `catalogue`
   (standard puis marques) et `libelleHuile()` — c'est `catalogue` qu'utilisent
   les pages, pas `huiles` directement.
-- Ajouter un calculateur = ajouter la section + l'entrée correspondante dans le
-  tableau `sommaire` en tête de fichier.
+- `src/data/calculateurs-nav.js` est la **source unique** de tout ce qui relie
+  les calculateurs entre eux et au reste du site : `sommaire` (groupes +
+  libellés), `liens` (calculateurs voisins), `fichesLiees` (codes de fiches par
+  calculateur), `exemples` (cas pré-remplis) et `grandeursLiees` (champs
+  désignant la même grandeur physique).
+- `LiensCalculateurs.astro` rend le pied de chaque carte à partir du seul `id` :
+  bouton d'exemple, fiches à lire, calculateurs voisins. Les liens portent
+  `data-cible`, donc ils se branchent tout seuls sur le filtrage de la page.
+  Les fiches non publiées sont ignorées silencieusement — jamais de lien mort.
+- Le lien retour (fiche → calculateurs) est **déduit automatiquement** de
+  `fichesLiees` par `calculateursPourFiche()`, rendu par `fiches/[code].astro`.
+  Rien à maintenir en double, et aucune modification du contenu des fiches.
+- Ajouter un calculateur = la section dans `calculateurs.astro` + une ligne
+  `<LiensCalculateurs id="calc-xxx" />` avant `</section>` + ses entrées dans
+  `calculateurs-nav.js` (`sommaire`, `liens`, et si pertinent `fichesLiees`,
+  `exemples`, `grandeursLiees`), sans oublier de le citer dans les `liens` des
+  calculateurs voisins.
+
+## Confort d'usage de la page calculateurs
+- **Saisies mémorisées** dans `localStorage` (clé `hydrodidac-calculateurs`),
+  restaurées au chargement ; bouton « Réinitialiser » qui repart des valeurs
+  capturées au premier rendu. Un `try/catch` entoure chaque accès : en
+  navigation privée la page fonctionne, elle ne mémorise simplement rien.
+- **Liaison des valeurs communes** (case à cocher, active par défaut) : saisir
+  le débit, la pression ou les diamètres d'un vérin une seule fois les reporte
+  dans tous les calculateurs concernés, d'après `grandeursLiees`. N'y regrouper
+  que des grandeurs réellement identiques — le « débit visé » d'un gicleur n'est
+  pas le débit de la pompe.
+  ⚠️ Remplir un champ par programme ne déclenche aucun évènement : c'est
+  pourquoi `appliquerValeurs()` prend une option `propagation`, utilisée par les
+  exemples mais pas par la restauration (dont le lot est déjà cohérent).
+- **Impression** : `@media print` dans la page ne garde que les cartes visibles
+  et leurs résultats (sommaire, filtres et blocs « Pour aller plus loin »
+  masqués, fonds supprimés). L'en-tête `#calc-print-entete` est rempli sur
+  `beforeprint`.
+- **Recherche globale** : `RechercheRapide.astro`, monté dans le Layout, donc
+  disponible partout. <kbd>Ctrl</kbd>+<kbd>K</kbd>, <kbd>⌘K</kbd> ou
+  <kbd>/</kbd>. Index construit au build (titres des fiches + des calculateurs),
+  recherche insensible aux accents et multi-mots. Complémentaire de Pagefind,
+  qui reste l'outil de recherche plein texte du contenu.
+  Aller à `/calculateurs#calc-xxx` depuis la page elle-même ne recharge rien :
+  c'est l'écouteur `hashchange` qui réapplique le filtre.
 - Le sélecteur d'huile (filtres marque/type/grade + liste) est **mutualisé** :
   les fonctions `construireOptionsHuiles(p)` et `majHuile(p)` prennent un
   préfixe d'identifiants (`vi` = viscosité, `gi` = gicleur). Pour brancher le
   catalogue d'huiles sur un nouveau calculateur, dupliquer le bloc de filtres
   avec un nouveau préfixe, poser `class="calc-filtre"` / `class="calc-huile-select"`
   et `data-prefixe="<préfixe>"`, plus les champs cachés `<préfixe>-n1` / `-n2`.
-- Reste 6 calculateurs à intégrer, spécifiés dans
-  `../SPECS_CALCULATEURS_MANQUANTS.md` : réservoir, moteur d'entraînement,
-  flambage de tige (Euler), pertes dans les accessoires, rigidité hydraulique,
-  convertisseur d'unités. Le n° 2 de cette spec (bilan thermique) est fait.
+- Calculateurs restant à intégrer, tous spécifiés (formules incluses) dans
+  `../SPECS_CALCULATEURS_MANQUANTS.md` : accumulateur résolvant n'importe quelle
+  inconnue (évolution de l'existant, prioritaire), réservoir, groupe « Moteur »
+  (moteur d'entraînement + caractéristiques du moteur électrique + choix du
+  moteur hydraulique), thermoplongeur, flambage de tige, pertes dans les
+  accessoires, rigidité hydraulique, convertisseur d'unités. Le bilan thermique
+  (n° 2) est fait.
 - Les fonctions physiques partagées sont en tête du script : `viscositeA()`
   (Walther/ASTM D341), `masseVolumiqueA()` (densité par famille d'huile, corrigée
   en température), `verdictOrifice()` (validité du coefficient de débit selon
