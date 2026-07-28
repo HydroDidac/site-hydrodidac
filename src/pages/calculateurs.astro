@@ -421,23 +421,35 @@ const huileParDefaut = "Huile minérale standard 46 cSt";
         <h2>Accumulateur : volume utile</h2>
         <p class="calc-desc">Volume d'huile restituable par un accumulateur à vessie entre deux pressions de service (loi des gaz, pressions absolues).</p>
         <p class="calc-formule">ΔV = V₀ × p₀ × (1/p<sub>min</sub> − 1/p<sub>max</sub>)</p>
-        <label>Volume de l'accumulateur V₀ <span class="unite">L</span>
+        <label>Que voulez-vous calculer ?
+          <select id="ac-inconnue">
+            <option value="dv" selected>Le volume utile ΔV</option>
+            <option value="v0">Le volume de l'accumulateur V₀</option>
+            <option value="p0">La pression de gonflage p₀</option>
+            <option value="pmin">La pression de service mini</option>
+            <option value="pmax">La pression de service maxi</option>
+          </select>
+        </label>
+        <label id="ac-champ-dv" hidden>Volume utile voulu ΔV <span class="unite">L</span>
+          <input type="number" id="ac-dv" value="2" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label id="ac-champ-v0">Volume de l'accumulateur V₀ <span class="unite">L</span>
           <input type="number" id="ac-v0" value="10" min="0" step="any" inputmode="decimal" />
         </label>
-        <label>Pression de gonflage p₀ <span class="unite">bar</span>
+        <label id="ac-champ-p0">Pression de gonflage p₀ <span class="unite">bar</span>
           <input type="number" id="ac-p0" value="140" min="0" step="any" inputmode="decimal" />
         </label>
-        <label>Pression de service mini p<sub>min</sub> <span class="unite">bar</span>
+        <label id="ac-champ-pmin">Pression de service mini p<sub>min</sub> <span class="unite">bar</span>
           <input type="number" id="ac-pmin" value="160" min="0" step="any" inputmode="decimal" />
         </label>
-        <label>Pression de service maxi p<sub>max</sub> <span class="unite">bar</span>
+        <label id="ac-champ-pmax">Pression de service maxi p<sub>max</sub> <span class="unite">bar</span>
           <input type="number" id="ac-pmax" value="250" min="0" step="any" inputmode="decimal" />
         </label>
         <div class="calc-resultat">
-          <span class="resultat-label">Volume utile (cycle lent, isotherme)</span>
+          <span class="resultat-label" id="ac-label-iso">Volume utile (cycle lent, isotherme)</span>
           <span class="resultat-valeur" id="ac-res-iso">—</span>
         </div>
-        <div class="calc-resultat">
+        <div class="calc-resultat" id="ac-bloc-adia">
           <span class="resultat-label">Volume utile (cycle rapide, adiabatique)</span>
           <span class="resultat-valeur" id="ac-res-adia">—</span>
         </div>
@@ -749,6 +761,477 @@ const huileParDefaut = "Huile minérale standard 46 cSt";
           <p><span class="pastille-niveau avance">🔴 Expert</span>La surface d'échange est estimée à partir d'un réservoir approximé cubique : affinez-la si vous connaissez la géométrie réelle, et n'oubliez pas que les tuyauteries participent aussi à l'évacuation. Au-delà d'environ 60 °C, la durée de vie de l'huile est approximativement divisée par deux tous les 10 °C supplémentaires, et la viscosité chute — croisez ce résultat avec le calculateur de viscosité pour vérifier qu'il reste du film d'huile à la température d'équilibre.</p>
         </details>
         <LiensCalculateurs id="calc-echauffement" />
+      </section>
+
+      <!-- 18. Puissance du moteur d'entraînement -->
+      <section class="calc-carte" id="calc-moteur-entrainement">
+        <h2>Puissance du moteur d'entraînement</h2>
+        <p class="calc-desc">Puissance mécanique à installer sur l'arbre de pompe, et couple correspondant au régime de rotation choisi.</p>
+        <p class="calc-formule">P<sub>moteur</sub> = P<sub>hyd</sub> ÷ η<sub>global</sub> &nbsp;·&nbsp; C = 9550 × P ÷ N</p>
+        <label>Débit Q <span class="unite">L/min</span>
+          <input type="number" id="me-q" value="60" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Pression de service p <span class="unite">bar</span>
+          <input type="number" id="me-p" value="200" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Rendement global du groupe η <span class="unite">%</span>
+          <input type="number" id="me-eta" value="80" min="1" max="99" step="any" inputmode="decimal" />
+        </label>
+        <label>Régime du moteur N <span class="unite">tr/min</span>
+          <input type="number" id="me-n" value="1500" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Puissance hydraulique utile</span>
+          <span class="resultat-valeur" id="me-res-hyd">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Puissance moteur minimale</span>
+          <span class="resultat-valeur" id="me-res-mot">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Couple sur l'arbre</span>
+          <span class="resultat-valeur" id="me-res-couple">—</span>
+        </div>
+        <p class="calc-note" id="me-verdict"></p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>La pompe consomme toujours plus que ce qu'elle transmet à l'huile : le moteur doit couvrir la puissance hydraulique <strong>plus</strong> les pertes. C'est le rendement global qui fait la différence.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Au démarrage à froid, la viscosité élevée augmente fortement le couple résistant : gardez une marge, surtout sur un moteur thermique. Vérifiez la compatibilité entre le couple de démarrage et le calibre de la protection thermique du moteur électrique, et raisonnez sur la puissance moyenne du cycle machine, pas seulement sur la crête.</p>
+        </details>
+        <LiensCalculateurs id="calc-moteur-entrainement" />
+      </section>
+
+      <!-- 19. Caractéristiques du moteur électrique -->
+      <section class="calc-carte" id="calc-moteur-electrique">
+        <h2>Caractéristiques du moteur électrique</h2>
+        <p class="calc-desc">Vitesse réelle, couple et courant absorbé d'un moteur asynchrone triphasé, à partir de sa puissance et de son nombre de pôles.</p>
+        <p class="calc-formule">N<sub>s</sub> = 120 × f ÷ pôles &nbsp;·&nbsp; I = P ÷ (√3 × U × cos φ × η)</p>
+        <label>Puissance du moteur <span class="unite">kW</span>
+          <input type="number" id="el-p" value="22" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Nombre de pôles
+          <select id="el-poles">
+            <option value="2">2 pôles (≈ 3000 tr/min)</option>
+            <option value="4" selected>4 pôles (≈ 1500 tr/min)</option>
+            <option value="6">6 pôles (≈ 1000 tr/min)</option>
+            <option value="8">8 pôles (≈ 750 tr/min)</option>
+          </select>
+        </label>
+        <label>Fréquence du réseau f <span class="unite">Hz</span>
+          <input type="number" id="el-f" value="50" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Glissement g <span class="unite">%</span>
+          <input type="number" id="el-g" value="3" min="0" max="20" step="any" inputmode="decimal" />
+        </label>
+        <label>Tension entre phases U <span class="unite">V</span>
+          <input type="number" id="el-u" value="400" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Facteur de puissance cos φ
+          <input type="number" id="el-cos" value="0.85" min="0" max="1" step="any" inputmode="decimal" />
+        </label>
+        <label>Rendement du moteur η <span class="unite">%</span>
+          <input type="number" id="el-eta" value="92" min="1" max="100" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Vitesse réelle en charge</span>
+          <span class="resultat-valeur" id="el-res-n">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Couple nominal</span>
+          <span class="resultat-valeur" id="el-res-couple">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Courant absorbé</span>
+          <span class="resultat-valeur" id="el-res-i">—</span>
+        </div>
+        <p class="calc-note" id="el-note"></p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Le nombre de pôles fixe la vitesse : deux pôles tournent vite, huit pôles tournent lentement. À puissance égale, un moteur lent développe plus de couple — et coûte plus cher.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Le glissement n'est pas une perte de rendement mais la condition même du fonctionnement de l'asynchrone : sans écart entre le champ tournant et le rotor, aucun couple n'est produit. Le courant de démarrage en direct atteint 5 à 7 fois le nominal ; le démarrage étoile-triangle le divise par trois, mais divise aussi le couple de démarrage par trois — à vérifier face au couple résistant de la pompe à froid.</p>
+        </details>
+        <LiensCalculateurs id="calc-moteur-electrique" />
+      </section>
+
+      <!-- 20. Choix d'un moteur hydraulique -->
+      <section class="calc-carte" id="calc-choix-moteur">
+        <h2>Choix d'un moteur hydraulique</h2>
+        <p class="calc-desc">Cylindrée et débit nécessaires pour obtenir un couple et une vitesse donnés, avec la famille de moteur la mieux adaptée.</p>
+        <p class="calc-formule">Cyl = C × 20π ÷ (Δp × η<sub>m</sub>) &nbsp;·&nbsp; Q = Cyl × N ÷ (1000 × η<sub>v</sub>)</p>
+        <label>Couple visé C <span class="unite">Nm</span>
+          <input type="number" id="cm-c" value="200" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Vitesse visée N <span class="unite">tr/min</span>
+          <input type="number" id="cm-n" value="300" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Pression disponible Δp <span class="unite">bar</span>
+          <input type="number" id="cm-dp" value="200" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Rendement mécanique η<sub>m</sub> <span class="unite">%</span>
+          <input type="number" id="cm-rm" value="92" min="1" max="100" step="any" inputmode="decimal" />
+        </label>
+        <label>Rendement volumétrique η<sub>v</sub> <span class="unite">%</span>
+          <input type="number" id="cm-rv" value="95" min="1" max="100" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Cylindrée nécessaire</span>
+          <span class="resultat-valeur" id="cm-res-cyl">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Débit à fournir</span>
+          <span class="resultat-valeur" id="cm-res-q">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Puissance mécanique en sortie</span>
+          <span class="resultat-valeur" id="cm-res-p">—</span>
+        </div>
+        <p class="calc-note" id="cm-verdict"></p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Deux besoins seulement décident du moteur : la force de rotation voulue (le couple) et la vitesse. Le couple vient de la cylindrée et de la pression, la vitesse vient du débit.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>La famille proposée est un point de départ, pas une prescription. Le critère qui tranche en pratique est souvent la vitesse minimale garantie sans broutage, très différente d'une technologie à l'autre : un moteur lent à came tourne proprement à quelques tours par minute là où un moteur à engrenages décroche. Pensez aussi au drainage externe et à la tenue en pression de retour, souvent limitante sur les moteurs à pistons.</p>
+        </details>
+        <LiensCalculateurs id="calc-choix-moteur" />
+      </section>
+
+      <!-- 21. Flambage de la tige -->
+      <section class="calc-carte" id="calc-flambage">
+        <h2>Flambage de la tige</h2>
+        <p class="calc-desc">Vérification qu'une tige longue et fine ne plie pas d'un coup sous la poussée, bien avant d'atteindre sa limite en compression.</p>
+        <p class="calc-formule">F<sub>crit</sub> = π² × E × I ÷ L<sub>f</sub>² &nbsp;avec&nbsp; I = π d⁴ ÷ 64</p>
+        <label>Diamètre de la tige d <span class="unite">mm</span>
+          <input type="number" id="fl-d" value="56" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Longueur libre (course sortie) <span class="unite">mm</span>
+          <input type="number" id="fl-l" value="900" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Type de montage
+          <select id="fl-mu">
+            <option value="0.5">Encastré aux deux extrémités — μ 0,5</option>
+            <option value="0.7">Encastré / rotule — μ 0,7</option>
+            <option value="1">Rotule / rotule (articulé aux deux bouts) — μ 1</option>
+            <option value="2" selected>Encastré / libre — μ 2 (le plus défavorable)</option>
+          </select>
+        </label>
+        <label>Coefficient de sécurité
+          <input type="number" id="fl-s" value="3.5" min="1" step="any" inputmode="decimal" />
+        </label>
+        <label>Charge de service réelle (facultatif) <span class="unite">kN</span>
+          <input type="number" id="fl-f" value="196" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Charge critique d'Euler</span>
+          <span class="resultat-valeur" id="fl-res-crit">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Charge admissible</span>
+          <span class="resultat-valeur" id="fl-res-adm">—</span>
+        </div>
+        <p class="calc-note" id="fl-verdict"></p>
+        <p class="calc-note">Calcul pour une tige pleine en acier (E = 210 000 MPa). Laissez la charge de service à zéro pour n'obtenir que les charges limites.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Une tige fine et longue peut plier brutalement sous la poussée, comme une règle qu'on comprime. Plus la course sortie est grande, plus le risque augmente — et le flambage arrive sans prévenir.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Le montage conditionne tout via le coefficient μ : passer d'un encastré-libre à un montage articulé aux deux bouts divise la longueur de flambage par deux, donc multiplie la charge critique par quatre. Pour les grandes courses, envisagez une tige de plus fort diamètre, un tube-guide ou un vérin à double tige. Le calcul d'Euler ne tient compte ni du poids propre, ni des efforts latéraux, ni d'un défaut de rectitude initial : d'où le coefficient de sécurité, rarement inférieur à 3,5.</p>
+        </details>
+        <LiensCalculateurs id="calc-flambage" />
+      </section>
+
+      <!-- 22. Rigidité et fréquence propre -->
+      <section class="calc-carte" id="calc-rigidite">
+        <h2>Rigidité et fréquence propre</h2>
+        <p class="calc-desc">Raideur du « ressort hydraulique » que forme la colonne d'huile, et fréquence propre de l'axe — utile pour comprendre les à-coups et régler un asservissement.</p>
+        <p class="calc-formule">k<sub>h</sub> = β × A ÷ L &nbsp;·&nbsp; f = (1 ÷ 2π) × √(k<sub>h</sub> ÷ m)</p>
+        <label>Diamètre du piston <span class="unite">mm</span>
+          <input type="number" id="rg-d" value="100" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Longueur de la colonne d'huile <span class="unite">mm</span>
+          <input type="number" id="rg-l" value="400" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Masse mobile ramenée <span class="unite">kg</span>
+          <input type="number" id="rg-m" value="800" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Module de compressibilité β <span class="unite">MPa</span>
+          <input type="number" id="rg-beta" value="1400" min="0" step="any" inputmode="decimal" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Raideur hydraulique</span>
+          <span class="resultat-valeur" id="rg-res-k">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Fréquence propre</span>
+          <span class="resultat-valeur" id="rg-res-f">—</span>
+        </div>
+        <p class="calc-note" id="rg-verdict"></p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>L'huile n'est pas parfaitement incompressible : la colonne se comporte comme un ressort très raide. Plus elle est longue, plus c'est « mou », et plus l'axe oscille aux démarrages et aux arrêts.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>L'air entraîné est l'ennemi n° 1 de la raideur : quelques pour cent d'air non dissous suffisent à effondrer le β effectif, et avec lui la fréquence propre. Les flexibles longs, les volumes morts et une position de vérin défavorable abaissent également f. En asservissement, visez une bande passante inférieure au tiers de la fréquence propre. Pour un vérin dont les deux chambres sont fermées, additionnez les raideurs : k = β A² (1/V₁ + 1/V₂), toujours plus élevé que la valeur d'une seule chambre.</p>
+        </details>
+        <LiensCalculateurs id="calc-rigidite" />
+      </section>
+
+      <!-- 23. Pertes dans les accessoires -->
+      <section class="calc-carte" id="calc-pertes-accessoires">
+        <h2>Pertes dans les accessoires</h2>
+        <p class="calc-desc">Perte de charge des singularités — coudes, tés, raccords, appareils — que le calcul en conduite droite ne couvre pas.</p>
+        <p class="calc-formule">Δp = K<sub>total</sub> × ρ × v² ÷ 2 &nbsp;avec&nbsp; K<sub>total</sub> = Σ (n × K)</p>
+        <label>Débit Q <span class="unite">L/min</span>
+          <input type="number" id="pa-q" value="60" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Diamètre intérieur d <span class="unite">mm</span>
+          <input type="number" id="pa-d" value="20" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Masse volumique ρ <span class="unite">kg/m³</span>
+          <input type="number" id="pa-rho" value="865" min="0" step="any" inputmode="decimal" />
+        </label>
+        <p class="calc-filtres-titre">Nombre d'accessoires sur le trajet :</p>
+        <div class="calc-filtres">
+          <label>Coudes 90° <span class="unite">K 0,9</span>
+            <input type="number" id="pa-coude90" value="4" min="0" step="1" inputmode="numeric" />
+          </label>
+          <label>Coudes 45° <span class="unite">K 0,4</span>
+            <input type="number" id="pa-coude45" value="0" min="0" step="1" inputmode="numeric" />
+          </label>
+          <label>Tés (passage direct) <span class="unite">K 0,4</span>
+            <input type="number" id="pa-te" value="1" min="0" step="1" inputmode="numeric" />
+          </label>
+          <label>Tés (dérivation) <span class="unite">K 1,3</span>
+            <input type="number" id="pa-te-der" value="0" min="0" step="1" inputmode="numeric" />
+          </label>
+          <label>Raccords / unions <span class="unite">K 0,1</span>
+            <input type="number" id="pa-raccord" value="2" min="0" step="1" inputmode="numeric" />
+          </label>
+          <label>Entrées / sorties réservoir <span class="unite">K 0,75</span>
+            <input type="number" id="pa-reservoir" value="1" min="0" step="1" inputmode="numeric" />
+          </label>
+        </div>
+        <label>Autre composant — coefficient K <span class="unite">distributeur : 2 à 5</span>
+          <input type="number" id="pa-autre-k" value="2" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Nombre de ces composants
+          <input type="number" id="pa-autre-n" value="1" min="0" step="1" inputmode="numeric" />
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Coefficient K total</span>
+          <span class="resultat-valeur" id="pa-res-k">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Perte de charge</span>
+          <span class="resultat-valeur" id="pa-res-dp">—</span>
+        </div>
+        <p class="calc-note" id="pa-note"></p>
+        <p class="calc-note">Les coefficients K proposés sont des ordres de grandeur : dès que la donnée constructeur existe (courbe Δp = f(Q) d'un distributeur, d'un clapet ou d'un filtre), elle prime sur ce calcul.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Chaque coude, chaque raccord et chaque appareil freine l'huile et « mange » de la pression, transformée en chaleur. Multiplier les singularités sur un trajet, c'est multiplier les pertes.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>La méthode des coefficients K vaut en régime turbulent. En laminaire — huile froide, forte viscosité — elle sous-estime les pertes, et il faut revenir aux courbes constructeur. La longueur équivalente (L<sub>eq</sub> = K·d/λ) est une alternative pratique : elle convertit chaque singularité en mètres de tube, directement additionnables à la longueur réelle.</p>
+        </details>
+        <LiensCalculateurs id="calc-pertes-accessoires" />
+      </section>
+
+      <!-- 24. Dimensionnement du réservoir -->
+      <section class="calc-carte" id="calc-reservoir">
+        <h2>Dimensionnement du réservoir</h2>
+        <p class="calc-desc">Contenance conseillée à partir du débit de pompe, selon la règle usuelle de 3 à 5 fois le débit par minute.</p>
+        <p class="calc-formule">V (L) = k × Q (L/min)</p>
+        <label>Débit de la pompe Q <span class="unite">L/min</span>
+          <input type="number" id="rs-q" value="60" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Type d'installation
+          <select id="rs-k">
+            <option value="3">Compact, avec refroidisseur — 3 × Q</option>
+            <option value="4" selected>Standard — 4 × Q</option>
+            <option value="5">Sans échangeur, forte dissipation — 5 × Q</option>
+          </select>
+        </label>
+        <div class="calc-resultat">
+          <span class="resultat-label">Volume conseillé</span>
+          <span class="resultat-valeur" id="rs-res">—</span>
+        </div>
+        <p class="calc-note" id="rs-note"></p>
+        <p class="calc-note">Prévoyez en plus 10 à 15 % de ciel d'air au-dessus du niveau maximal, pour la dilatation de l'huile et la désaération.</p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Le réservoir ne sert pas qu'à stocker l'huile : il la laisse se reposer, les bulles remontent, les impuretés se déposent et la chaleur s'évacue. Trop petit, l'huile n'a pas le temps de faire tout cela et vieillit vite.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>La règle du débit est un point de départ, pas un critère : le vrai dimensionnement est thermique — passez au bilan thermique pour vérifier que le réservoir évacue réellement la chaleur produite. Les circuits fermés (transmissions hydrostatiques) y dérogent complètement, avec des réservoirs bien plus petits puisque le fluide ne fait que compenser les fuites. Pensez aussi à la place perdue par le volume rentrant des vérins.</p>
+        </details>
+        <LiensCalculateurs id="calc-reservoir" />
+      </section>
+
+      <!-- 25. Puissance de thermoplongeur -->
+      <section class="calc-carte" id="calc-thermoplongeur">
+        <h2>Puissance de thermoplongeur</h2>
+        <p class="calc-desc">Puissance de réchauffage d'un réservoir, puissance de maintien en température, et surtout vérification de la densité de puissance surfacique — le vrai critère de choix.</p>
+        <p class="calc-formule">P = V × ρ × c × ΔT ÷ (3600 × t) &nbsp;·&nbsp; w = P ÷ S<sub>chauffante</sub></p>
+        <label>Volume d'huile <span class="unite">L</span>
+          <input type="number" id="tp-v" value="200" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Masse volumique de l'huile <span class="unite">kg/L</span>
+          <input type="number" id="tp-rho" value="0.87" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Chaleur massique c <span class="unite">kJ/kg·K</span>
+          <input type="number" id="tp-c" value="1.9" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Température de départ <span class="unite">°C</span>
+          <input type="number" id="tp-tdep" value="10" step="any" inputmode="decimal" />
+        </label>
+        <label>Température visée <span class="unite">°C</span>
+          <input type="number" id="tp-tcible" value="40" step="any" inputmode="decimal" />
+        </label>
+        <label>Durée de chauffe souhaitée <span class="unite">h</span>
+          <input type="number" id="tp-duree" value="3" min="0" step="any" inputmode="decimal" />
+        </label>
+        <label>Température ambiante <span class="unite">°C</span>
+          <input type="number" id="tp-tamb" value="10" step="any" inputmode="decimal" />
+        </label>
+        <label>Échange du réservoir avec l'air
+          <select id="tp-k">
+            <option value="10">Réservoir encoffré ou encrassé (k = 10 W/m²·K)</option>
+            <option value="12" selected>Tôle propre, air calme (k = 12 W/m²·K)</option>
+            <option value="15">Bien dégagé ou légèrement ventilé (k = 15 W/m²·K)</option>
+          </select>
+        </label>
+        <p class="calc-filtres-titre">Géométrie de l'élément chauffant :</p>
+        <div class="calc-filtres">
+          <label>Type de thermoplongeur
+            <select id="tp-type">
+              <option value="standard" selected>Standard — éléments immergés</option>
+              <option value="barillet">À barillet — éléments sous fourreau</option>
+            </select>
+          </label>
+          <label>Diamètre d'un élément <span class="unite">mm</span>
+            <input type="number" id="tp-d" value="12" min="0" step="any" inputmode="decimal" />
+          </label>
+          <label>Profondeur immergée <span class="unite">mm</span>
+            <input type="number" id="tp-l" value="500" min="0" step="any" inputmode="decimal" />
+          </label>
+          <label>Nombre d'épingles
+            <input type="number" id="tp-n" value="4" min="1" step="1" inputmode="numeric" />
+          </label>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Puissance de chauffe</span>
+          <span class="resultat-valeur" id="tp-res-chauffe">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Puissance de maintien</span>
+          <span class="resultat-valeur" id="tp-res-maintien">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Puissance à installer</span>
+          <span class="resultat-valeur" id="tp-res-total">—</span>
+        </div>
+        <div class="calc-resultat">
+          <span class="resultat-label">Densité de puissance surfacique</span>
+          <span class="resultat-valeur" id="tp-res-densite">—</span>
+        </div>
+        <p class="calc-note" id="tp-note"></p>
+        <p class="calc-note" id="tp-verdict"></p>
+        <p class="calc-note" id="tp-type-note"></p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Une huile froide est épaisse : la pompe peine, elle cavite, et le rendement s'effondre. Le thermoplongeur amène l'huile à température avant le démarrage en charge. Une épingle est un tube plié en U : ses deux branches chauffent, la surface compte donc double par rapport à la profondeur immergée.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Ne raisonnez jamais en kilowatts seuls : c'est la densité de puissance surfacique qui décide de la durée de vie de l'huile. Au contact d'un élément trop chaud, l'huile craque, forme des vernis et colmate les filtres — un dégât insidieux, qu'on attribue souvent à tort à l'huile elle-même. Prévoyez un thermostat de régulation <strong>et</strong> un thermostat de sécurité indépendant, et asservissez l'alimentation au niveau bas : un élément non immergé grille en quelques minutes.</p>
+        </details>
+        <LiensCalculateurs id="calc-thermoplongeur" />
+      </section>
+
+      <!-- 26. Conversions d'unités -->
+      <section class="calc-carte calc-carte--large" id="calc-conversions">
+        <h2>Conversions d'unités</h2>
+        <p class="calc-desc">Les conversions courantes de l'hydraulique, notamment face à la documentation anglo-saxonne. Saisissez d'un côté ou de l'autre : l'autre champ suit.</p>
+        <p class="calc-formule">1 bar = 14,5038 psi &nbsp;·&nbsp; 1 L/min = 0,2642 US gpm &nbsp;·&nbsp; 1 kW = 1,341 hp</p>
+        <div class="calc-conversions">
+          <div class="calc-conv-ligne">
+            <label>Pression <span class="unite">bar</span>
+              <input type="number" id="cv-bar" class="calc-conv" data-vers="cv-psi" data-facteur="14.5038" value="200" step="any" inputmode="decimal" />
+            </label>
+            <span class="calc-conv-signe">=</span>
+            <label>Pression <span class="unite">psi</span>
+              <input type="number" id="cv-psi" class="calc-conv" data-vers="cv-bar" data-facteur="0.06894757" step="any" inputmode="decimal" />
+            </label>
+          </div>
+          <div class="calc-conv-ligne">
+            <label>Pression <span class="unite">bar</span>
+              <input type="number" id="cv-bar2" class="calc-conv" data-vers="cv-mpa" data-facteur="0.1" value="200" step="any" inputmode="decimal" />
+            </label>
+            <span class="calc-conv-signe">=</span>
+            <label>Pression <span class="unite">MPa</span>
+              <input type="number" id="cv-mpa" class="calc-conv" data-vers="cv-bar2" data-facteur="10" step="any" inputmode="decimal" />
+            </label>
+          </div>
+          <div class="calc-conv-ligne">
+            <label>Débit <span class="unite">L/min</span>
+              <input type="number" id="cv-lmin" class="calc-conv" data-vers="cv-gpm" data-facteur="0.2641721" value="60" step="any" inputmode="decimal" />
+            </label>
+            <span class="calc-conv-signe">=</span>
+            <label>Débit <span class="unite">US gpm</span>
+              <input type="number" id="cv-gpm" class="calc-conv" data-vers="cv-lmin" data-facteur="3.785412" step="any" inputmode="decimal" />
+            </label>
+          </div>
+          <div class="calc-conv-ligne">
+            <label>Cylindrée <span class="unite">cm³/tr</span>
+              <input type="number" id="cv-cm3" class="calc-conv" data-vers="cv-in3" data-facteur="0.06102374" value="45" step="any" inputmode="decimal" />
+            </label>
+            <span class="calc-conv-signe">=</span>
+            <label>Cylindrée <span class="unite">in³/rev</span>
+              <input type="number" id="cv-in3" class="calc-conv" data-vers="cv-cm3" data-facteur="16.387064" step="any" inputmode="decimal" />
+            </label>
+          </div>
+          <div class="calc-conv-ligne">
+            <label>Volume <span class="unite">L</span>
+              <input type="number" id="cv-l" class="calc-conv" data-vers="cv-gal" data-facteur="0.2641721" value="200" step="any" inputmode="decimal" />
+            </label>
+            <span class="calc-conv-signe">=</span>
+            <label>Volume <span class="unite">US gal</span>
+              <input type="number" id="cv-gal" class="calc-conv" data-vers="cv-l" data-facteur="3.785412" step="any" inputmode="decimal" />
+            </label>
+          </div>
+          <div class="calc-conv-ligne">
+            <label>Température <span class="unite">°C</span>
+              <input type="number" id="cv-c" class="calc-conv" data-vers="cv-f" data-facteur="1.8" data-offset="32" value="50" step="any" inputmode="decimal" />
+            </label>
+            <span class="calc-conv-signe">=</span>
+            <label>Température <span class="unite">°F</span>
+              <input type="number" id="cv-f" class="calc-conv" data-vers="cv-c" data-facteur="0.5555556" data-offset="-17.777778" step="any" inputmode="decimal" />
+            </label>
+          </div>
+          <div class="calc-conv-ligne">
+            <label>Puissance <span class="unite">kW</span>
+              <input type="number" id="cv-kw" class="calc-conv" data-vers="cv-hp" data-facteur="1.341022" value="22" step="any" inputmode="decimal" />
+            </label>
+            <span class="calc-conv-signe">=</span>
+            <label>Puissance <span class="unite">hp</span>
+              <input type="number" id="cv-hp" class="calc-conv" data-vers="cv-kw" data-facteur="0.7456999" step="any" inputmode="decimal" />
+            </label>
+          </div>
+          <div class="calc-conv-ligne">
+            <label>Couple <span class="unite">Nm</span>
+              <input type="number" id="cv-nm" class="calc-conv" data-vers="cv-lbft" data-facteur="0.7375621" value="200" step="any" inputmode="decimal" />
+            </label>
+            <span class="calc-conv-signe">=</span>
+            <label>Couple <span class="unite">lbf·ft</span>
+              <input type="number" id="cv-lbft" class="calc-conv" data-vers="cv-nm" data-facteur="1.355818" step="any" inputmode="decimal" />
+            </label>
+          </div>
+          <div class="calc-conv-ligne">
+            <label>Viscosité <span class="unite">cSt</span>
+              <input type="number" id="cv-cst" class="calc-conv" data-vers="cv-sus" data-facteur="4.635" value="100" step="any" inputmode="decimal" />
+            </label>
+            <span class="calc-conv-signe">=</span>
+            <label>Viscosité <span class="unite">SUS</span>
+              <input type="number" id="cv-sus" class="calc-conv" data-vers="cv-cst" data-facteur="0.2157497" step="any" inputmode="decimal" />
+            </label>
+          </div>
+        </div>
+        <p class="calc-note" id="cv-note"></p>
+        <details class="calc-plus">
+          <summary>💡 Pour aller plus loin</summary>
+          <p><span class="pastille-niveau debutant">🟢 Débutant</span>Beaucoup de matériels et de notices utilisent les unités américaines : psi pour la pression, gpm pour le débit, SUS pour la viscosité. Ce convertisseur évite les erreurs de lecture, qui coûtent cher en hydraulique.</p>
+          <p><span class="pastille-niveau avance">🔴 Expert</span>Attention au gallon : le gallon impérial britannique vaut 4,546 L contre 3,785 L pour l'américain, soit 20 % d'écart — vérifiez toujours l'origine du document. La conversion cSt ↔ SUS n'est pas un simple facteur : la relation n'est linéaire qu'au-delà d'environ 70 cSt, en dessous il faut la table ASTM D2161. Et le « psi » d'une documentation est parfois un psig (relatif), parfois un psia (absolu).</p>
+        </details>
+        <LiensCalculateurs id="calc-conversions" />
       </section>
 
     </div>
@@ -1232,6 +1715,24 @@ const huileParDefaut = "Huile minérale standard 46 cSt";
       border-left: 3px solid #000;
     }
   }
+  /* Convertisseur d'unités : une ligne = deux champs équivalents */
+  .calc-conversions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0.4rem 1.4rem;
+  }
+  .calc-conv-ligne {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 0.5rem;
+  }
+  .calc-conv-signe {
+    font-family: var(--font-valeurs);
+    font-weight: 700;
+    color: #51606b;
+    padding-bottom: 0.55em;
+  }
   .calc-huile-info .calc-huile-badge {
     display: inline-block;
     font-family: var(--font-valeurs);
@@ -1481,27 +1982,84 @@ const huileParDefaut = "Huile minérale standard 46 cSt";
       diQ >= 0 && diVmax > 0 ? `${fmtFr(Math.sqrt((21.2 * diQ) / diVmax), 1)} mm` : "—"
     );
 
-    // 11. Accumulateur : ΔV entre pmin et pmax (pressions absolues = relatives + 1)
+    // 11. Accumulateur : les cinq grandeurs sont liées par une seule relation
+    //     ΔV = V₀ × p₀ × (1/p_min − 1/p_max), en pressions ABSOLUES (= relatives + 1).
+    //     Connaître quatre d'entre elles suffit donc toujours à trouver la
+    //     cinquième : le sélecteur choisit laquelle est l'inconnue.
+    //     Le cycle adiabatique (exposant 1,4) ne s'inverse pas analytiquement :
+    //     il n'est affiché que dans le sens direct.
+    const acInconnueEl = document.getElementById("ac-inconnue") as HTMLSelectElement | null;
+    const acInconnue = acInconnueEl?.value ?? "dv";
     const acV0 = lire("ac-v0"), acP0 = lire("ac-p0");
-    const acPmin = lire("ac-pmin"), acPmax = lire("ac-pmax");
-    if (acV0 > 0 && acP0 >= 0 && acPmin >= 0 && acPmax >= 0) {
-      const p0a = acP0 + 1, pMinA = acPmin + 1, pMaxA = acPmax + 1;
-      if (p0a < pMinA && pMinA < pMaxA) {
-        const dvIso = acV0 * p0a * (1 / pMinA - 1 / pMaxA);
-        const dvAdia = acV0 * ((p0a / pMinA) ** (1 / 1.4) - (p0a / pMaxA) ** (1 / 1.4));
-        afficher("ac-res-iso", `${fmtFr(dvIso, 2)} L`);
-        afficher("ac-res-adia", `${fmtFr(dvAdia, 2)} L`);
-        afficher("ac-verdict", "");
-      } else {
-        afficher("ac-res-iso", "—");
-        afficher("ac-res-adia", "—");
-        afficher("ac-verdict", "⚠️ Il faut respecter p₀ < p mini < p maxi.");
-      }
+    const acPmin = lire("ac-pmin"), acPmax = lire("ac-pmax"), acDv = lire("ac-dv");
+    // Pressions absolues
+    const p0a = acP0 + 1, pMinA = acPmin + 1, pMaxA = acPmax + 1;
+    const ecartInverse = 1 / pMinA - 1 / pMaxA;
+
+    afficher("ac-label-iso", acInconnue === "dv"
+      ? "Volume utile (cycle lent, isotherme)"
+      : { v0: "Volume d'accumulateur nécessaire", p0: "Pression de gonflage à retenir",
+          pmin: "Pression de service mini", pmax: "Pression de service maxi" }[acInconnue] ?? "Résultat");
+
+    let acValeur = NaN, acUnite = "L", acAlerte = "";
+    if (acInconnue === "dv") {
+      if (acV0 > 0 && p0a < pMinA && pMinA < pMaxA) acValeur = acV0 * p0a * ecartInverse;
+      else acAlerte = "⚠️ Il faut respecter p₀ < p mini < p maxi.";
+    } else if (acInconnue === "v0") {
+      if (acDv > 0 && p0a < pMinA && pMinA < pMaxA) acValeur = acDv / (p0a * ecartInverse);
+      else acAlerte = "⚠️ Il faut un volume utile positif et respecter p₀ < p mini < p maxi.";
+    } else if (acInconnue === "p0") {
+      acUnite = "bar";
+      if (acDv > 0 && acV0 > 0 && pMinA < pMaxA) {
+        const p0Calc = acDv / (acV0 * ecartInverse);
+        acValeur = p0Calc - 1;
+        if (p0Calc >= pMinA) acAlerte = "⚠️ Impossible : il faudrait gonfler au-dessus de la pression mini de service. Prenez un accumulateur plus grand ou un volume utile plus faible.";
+      } else acAlerte = "⚠️ Renseignez le volume utile, le volume d'accumulateur, et p mini < p maxi.";
+    } else if (acInconnue === "pmin") {
+      acUnite = "bar";
+      if (acDv > 0 && acV0 > 0 && p0a > 0 && pMaxA > 0) {
+        const inverse = acDv / (acV0 * p0a) + 1 / pMaxA;
+        const pMinCalc = 1 / inverse;
+        acValeur = pMinCalc - 1;
+        if (pMinCalc <= p0a) acAlerte = "⚠️ Résultat sous la pression de gonflage : ce volume utile est hors de portée de cet accumulateur.";
+      } else acAlerte = "⚠️ Renseignez le volume utile, le volume d'accumulateur et la pression maxi.";
+    } else if (acInconnue === "pmax") {
+      acUnite = "bar";
+      if (acDv > 0 && acV0 > 0 && p0a > 0 && pMinA > 0) {
+        const inverse = 1 / pMinA - acDv / (acV0 * p0a);
+        if (inverse > 0) {
+          acValeur = 1 / inverse - 1;
+        } else {
+          acAlerte = "⚠️ Ce volume utile est impossible avec ce gonflage : l'accumulateur serait entièrement vidé avant d'atteindre la pression maxi. Augmentez V₀ ou p₀.";
+        }
+      } else acAlerte = "⚠️ Renseignez le volume utile, le volume d'accumulateur et la pression mini.";
+    }
+
+    if (Number.isFinite(acValeur) && acValeur > 0 && !acAlerte) {
+      afficher("ac-res-iso", `${fmtFr(acValeur, acUnite === "L" ? 2 : 1)} ${acUnite}`);
+      // Le gonflage conseillé vaut environ 0,9 × p mini : on le rappelle quand
+      // c'est justement p₀ que l'on cherche.
+      afficher("ac-verdict", acInconnue === "p0"
+        ? `Repère : le gonflage conseillé est d'environ 0,9 × p mini, soit ${fmtFr(0.9 * acPmin, 0)} bar ici.`
+        : "");
     } else {
       afficher("ac-res-iso", "—");
-      afficher("ac-res-adia", "—");
-      afficher("ac-verdict", "");
+      afficher("ac-verdict", acAlerte);
     }
+
+    // Volume utile en cycle rapide : seulement dans le sens direct.
+    const blocAdia = document.getElementById("ac-bloc-adia");
+    if (acInconnue === "dv") {
+      blocAdia?.removeAttribute("hidden");
+      if (acV0 > 0 && p0a < pMinA && pMinA < pMaxA) {
+        afficher("ac-res-adia", `${fmtFr(acV0 * ((p0a / pMinA) ** (1 / 1.4) - (p0a / pMaxA) ** (1 / 1.4)), 2)} L`);
+      } else {
+        afficher("ac-res-adia", "—");
+      }
+    } else {
+      blocAdia?.setAttribute("hidden", "");
+    }
+
 
     // 12. Vitesse d'un moteur hydraulique : N = Q × 1000 × ηv / Cyl
     const moQ = lire("mo-q"), moCyl = lire("mo-cyl"), moRv = lire("mo-rv");
@@ -1682,6 +2240,242 @@ const huileParDefaut = "Huile minérale standard 46 cSt";
       afficher("ec-note", "");
       afficher("ec-verdict", "");
     }
+
+    // 18. Moteur d'entraînement : P_moteur = P_hyd / η, puis C = 9550 P / N
+    const meQ = lire("me-q"), meP = lire("me-p"), meEta = lire("me-eta"), meN = lire("me-n");
+    if (meQ >= 0 && meP >= 0 && meEta > 0 && meEta <= 100) {
+      const pHyd = (meQ * meP) / 600;
+      const pMot = pHyd / (meEta / 100);
+      afficher("me-res-hyd", `${fmtFr(pHyd, 2)} kW`);
+      afficher("me-res-mot", `${fmtFr(pMot, 2)} kW`);
+      afficher("me-res-couple", meN > 0 ? `${fmtFr((9550 * pMot) / meN, 1)} Nm` : "—");
+      // Série des puissances normalisées CEI : on ne commande pas 25,3 kW.
+      const normalisees = [0.75, 1.1, 1.5, 2.2, 3, 4, 5.5, 7.5, 11, 15, 18.5, 22, 30, 37, 45, 55, 75];
+      const retenue = normalisees.find((p) => p >= pMot);
+      afficher(
+        "me-verdict",
+        retenue
+          ? `Prévoir un moteur normalisé de ${fmtFr(retenue, 1)} kW${meN > 0 ? ` à ${fmtFr(meN, 0)} tr/min` : ""}, et garder de la marge pour le démarrage à froid.`
+          : "Au-delà de la série normalisée courante : à traiter avec le constructeur."
+      );
+    } else {
+      afficher("me-res-hyd", "—");
+      afficher("me-res-mot", "—");
+      afficher("me-res-couple", "—");
+      afficher("me-verdict", "");
+    }
+
+    // 19. Moteur électrique asynchrone : vitesse de synchronisme, couple, courant
+    const elP = lire("el-p"), elF = lire("el-f"), elG = lire("el-g");
+    const elU = lire("el-u"), elCos = lire("el-cos"), elEta = lire("el-eta");
+    const elPolesEl = document.getElementById("el-poles") as HTMLSelectElement | null;
+    const elPoles = elPolesEl ? parseFloat(elPolesEl.value) : NaN;
+    if (elP > 0 && elF > 0 && elPoles > 0 && elG >= 0 && elG < 100) {
+      const nSync = (120 * elF) / elPoles;
+      const nReel = nSync * (1 - elG / 100);
+      afficher("el-res-n", `${fmtFr(nReel, 0)} tr/min`);
+      afficher("el-res-couple", nReel > 0 ? `${fmtFr((9550 * elP) / nReel, 1)} Nm` : "—");
+      if (elU > 0 && elCos > 0 && elEta > 0) {
+        const courant = (elP * 1000) / (Math.sqrt(3) * elU * elCos * (elEta / 100));
+        afficher("el-res-i", `${fmtFr(courant, 1)} A`);
+        afficher(
+          "el-note",
+          `Vitesse de synchronisme ${fmtFr(nSync, 0)} tr/min. Au démarrage direct, le courant atteint ${fmtFr(courant * 5, 0)} à ${fmtFr(courant * 7, 0)} A ; en étoile-triangle, environ ${fmtFr(courant * 2, 0)} A — mais le couple de démarrage est divisé par trois.`
+        );
+      } else {
+        afficher("el-res-i", "—");
+        afficher("el-note", `Vitesse de synchronisme ${fmtFr(nSync, 0)} tr/min.`);
+      }
+    } else {
+      afficher("el-res-n", "—");
+      afficher("el-res-couple", "—");
+      afficher("el-res-i", "—");
+      afficher("el-note", "");
+    }
+
+    // 20. Choix d'un moteur hydraulique : cylindrée et débit nécessaires
+    const cmC = lire("cm-c"), cmN = lire("cm-n"), cmDp = lire("cm-dp");
+    const cmRm = lire("cm-rm"), cmRv = lire("cm-rv");
+    if (cmC > 0 && cmN > 0 && cmDp > 0 && cmRm > 0 && cmRv > 0) {
+      const cylindree = (cmC * 20 * Math.PI) / (cmDp * (cmRm / 100));
+      const debit = (cylindree * cmN) / (1000 * (cmRv / 100));
+      const puissance = (cmC * 2 * Math.PI * cmN) / 60 / 1000;
+      afficher("cm-res-cyl", `${fmtFr(cylindree, 1)} cm³/tr`);
+      afficher("cm-res-q", `${fmtFr(debit, 1)} L/min`);
+      afficher("cm-res-p", `${fmtFr(puissance, 2)} kW`);
+      // Orientation par famille : la vitesse visée est le premier discriminant,
+      // le couple le second. Ce sont des domaines d'emploi, pas des limites.
+      let famille = "";
+      if (cmN < 100) {
+        famille = "🐌 Moteur lent à came (pistons radiaux) : entraînement direct sans réducteur, fort couple à très basse vitesse.";
+      } else if (cmN > 1200 && cmC < 100) {
+        famille = "⚡ Moteur à engrenages : rapide, couple modeste, économique et robuste — le choix par défaut sur engin mobile.";
+      } else if (cmC > 300 || cmDp > 250) {
+        famille = "🔩 Moteur à pistons : couple élevé, haute pression, meilleur rendement — plus coûteux et sensible à la pression de retour.";
+      } else {
+        famille = "🌀 Moteur à palettes ou à pistons : domaine intermédiaire, fonctionnement silencieux et régulier.";
+      }
+      afficher("cm-verdict", famille);
+    } else {
+      afficher("cm-res-cyl", "—");
+      afficher("cm-res-q", "—");
+      afficher("cm-res-p", "—");
+      afficher("cm-verdict", "");
+    }
+
+    // 21. Flambage de tige (Euler) : F_crit = π² E I / Lf², en système MPa/mm
+    // pour éviter toute conversion (E en MPa, I en mm⁴, résultat en newtons).
+    const flD = lire("fl-d"), flL = lire("fl-l"), flS = lire("fl-s"), flF = lire("fl-f");
+    const flMuEl = document.getElementById("fl-mu") as HTMLSelectElement | null;
+    const flMu = flMuEl ? parseFloat(flMuEl.value) : NaN;
+    if (flD > 0 && flL > 0 && flMu > 0 && flS >= 1) {
+      const inertie = (Math.PI * flD ** 4) / 64;
+      const longueurFlambage = flMu * flL;
+      const fCrit = (Math.PI ** 2 * 210000 * inertie) / longueurFlambage ** 2;
+      const fAdm = fCrit / flS;
+      afficher("fl-res-crit", `${fmtFr(fCrit / 1000, 1)} kN`);
+      afficher("fl-res-adm", `${fmtFr(fAdm / 1000, 1)} kN`);
+      const fService = flF * 1000;
+      if (flF > 0) {
+        afficher(
+          "fl-verdict",
+          fService <= fAdm
+            ? `✅ Tige suffisante : la charge de service représente ${fmtFr((fService / fAdm) * 100, 0)} % de l'admissible, soit une marge de ${fmtFr(fAdm / fService, 1)}×.`
+            : `⚠️ Risque de flambage : ${fmtFr(flF, 0)} kN demandés pour ${fmtFr(fAdm / 1000, 1)} kN admissibles. Augmentez le diamètre de tige, réduisez la course libre, ou choisissez un montage moins défavorable.`
+        );
+      } else {
+        afficher("fl-verdict", `Longueur de flambage retenue : ${fmtFr(longueurFlambage, 0)} mm (μ × longueur libre).`);
+      }
+    } else {
+      afficher("fl-res-crit", "—");
+      afficher("fl-res-adm", "—");
+      afficher("fl-verdict", "");
+    }
+
+    // 22. Rigidité hydraulique : k = β A² / V, avec V = A × L, donc k = β A / L.
+    const rgD = lire("rg-d"), rgL = lire("rg-l"), rgM = lire("rg-m"), rgBeta = lire("rg-beta");
+    if (rgD > 0 && rgL > 0 && rgBeta > 0) {
+      const aire = sectionM2(rgD);
+      const raideur = (rgBeta * 1e6 * aire) / (rgL / 1000); // N/m
+      afficher("rg-res-k", `${fmtFr(raideur / 1e6, 1)} kN/mm`);
+      if (rgM > 0) {
+        const frequence = Math.sqrt(raideur / rgM) / (2 * Math.PI);
+        afficher("rg-res-f", `${fmtFr(frequence, 1)} Hz`);
+        let verdictRg = "";
+        if (frequence < 10) {
+          verdictRg = `⚠️ Système mou (moins de 10 Hz) : sujet aux oscillations et aux à-coups. Raccourcissez la colonne d'huile ou augmentez la section du vérin.`;
+        } else {
+          verdictRg = `La bande passante d'un asservissement doit rester sous ${fmtFr(frequence / 3, 0)} Hz, soit le tiers de la fréquence propre.`;
+        }
+        afficher("rg-verdict", verdictRg);
+      } else {
+        afficher("rg-res-f", "—");
+        afficher("rg-verdict", "");
+      }
+    } else {
+      afficher("rg-res-k", "—");
+      afficher("rg-res-f", "—");
+      afficher("rg-verdict", "");
+    }
+
+    // 23. Pertes dans les accessoires : Δp = K_total × ρ v² / 2
+    const paQ = lire("pa-q"), paD = lire("pa-d"), paRho = lire("pa-rho");
+    const accessoires: [string, number][] = [
+      ["pa-coude90", 0.9], ["pa-coude45", 0.4], ["pa-te", 0.4],
+      ["pa-te-der", 1.3], ["pa-raccord", 0.1], ["pa-reservoir", 0.75],
+    ];
+    const kTotal =
+      accessoires.reduce((somme, [id, k]) => somme + (lire(id) || 0) * k, 0) +
+      (lire("pa-autre-k") || 0) * (lire("pa-autre-n") || 0);
+    if (paQ > 0 && paD > 0 && paRho > 0) {
+      const vPa = paQ / 60000 / sectionM2(paD);
+      const dpPa = (kTotal * paRho * vPa ** 2) / 2 / 1e5;
+      afficher("pa-res-k", fmtFr(kTotal, 2));
+      afficher("pa-res-dp", `${fmtFr(dpPa, 3)} bar`);
+      afficher(
+        "pa-note",
+        `Vitesse dans la conduite ${fmtFr(vPa, 2)} m/s · puissance perdue ${fmtFr((paQ * dpPa) / 600, 3)} kW. À additionner à la perte en conduite droite.`
+      );
+    } else {
+      afficher("pa-res-k", "—");
+      afficher("pa-res-dp", "—");
+      afficher("pa-note", "");
+    }
+
+    // 24. Réservoir : V = k × Q, règle usuelle de 3 à 5 fois le débit par minute
+    const rsQ = lire("rs-q");
+    const rsKEl = document.getElementById("rs-k") as HTMLSelectElement | null;
+    const rsK = rsKEl ? parseFloat(rsKEl.value) : NaN;
+    if (rsQ > 0 && rsK > 0) {
+      afficher("rs-res", `${fmtFr(rsQ * rsK, 0)} L`);
+      afficher(
+        "rs-note",
+        `Fourchette conseillée : ${fmtFr(rsQ * 3, 0)} à ${fmtFr(rsQ * 5, 0)} L. Le volume retenu ici est ${fmtFr(rsK, 0)} × le débit. Vérifiez-le ensuite au bilan thermique : c'est la chaleur, pas le débit, qui décide vraiment.`
+      );
+    } else {
+      afficher("rs-res", "—");
+      afficher("rs-note", "");
+    }
+
+    // 25. Thermoplongeur : énergie de chauffe, maintien, et densité surfacique.
+    // Une épingle est un tube plié en U : ses deux branches chauffent, d'où le
+    // facteur 2 sur la profondeur immergée.
+    const tpV = lire("tp-v"), tpRho = lire("tp-rho"), tpC = lire("tp-c");
+    const tpTdep = lireLibre("tp-tdep"), tpTcible = lireLibre("tp-tcible");
+    const tpDuree = lire("tp-duree"), tpTamb = lireLibre("tp-tamb");
+    const tpD = lire("tp-d"), tpL = lire("tp-l"), tpN = lire("tp-n");
+    const tpKEl = document.getElementById("tp-k") as HTMLSelectElement | null;
+    const tpK = tpKEl ? parseFloat(tpKEl.value) : NaN;
+    const tpTypeEl = document.getElementById("tp-type") as HTMLSelectElement | null;
+    const tpBarillet = tpTypeEl?.value === "barillet";
+    if (
+      tpV > 0 && tpRho > 0 && tpC > 0 && tpDuree > 0 && tpK > 0 &&
+      Number.isFinite(tpTdep) && Number.isFinite(tpTcible) && Number.isFinite(tpTamb) &&
+      tpTcible > tpTdep
+    ) {
+      const pChauffe = (tpV * tpRho * tpC * (tpTcible - tpTdep)) / (3600 * tpDuree);
+      const surfaceTp = surfaceReservoir(tpV);
+      const pMaintien = Math.max(0, (tpK * surfaceTp * (tpTcible - tpTamb)) / 1000);
+      const pTotale = pChauffe + pMaintien;
+      afficher("tp-res-chauffe", `${fmtFr(pChauffe, 2)} kW`);
+      afficher("tp-res-maintien", `${fmtFr(pMaintien, 2)} kW`);
+      afficher("tp-res-total", `${fmtFr(pTotale, 2)} kW`);
+      if (tpD > 0 && tpL > 0 && tpN > 0) {
+        // Surface chauffante en cm² : π × d × (2 × profondeur) × nombre d'épingles
+        const surfaceChauffante = Math.PI * (tpD / 10) * ((2 * tpL) / 10) * tpN;
+        const densite = (pTotale * 1000) / surfaceChauffante;
+        afficher("tp-res-densite", `${fmtFr(densite, 2)} W/cm²`);
+        afficher(
+          "tp-note",
+          `Surface chauffante ${fmtFr(surfaceChauffante, 0)} cm² (${fmtFr(tpN, 0)} épingles, deux branches chacune) · surface d'échange du réservoir ${fmtFr(surfaceTp, 1)} m².`
+        );
+        let verdictTp = "";
+        if (densite <= 1) verdictTp = "✅ Densité de puissance sans risque pour une huile minérale : le film au contact de l'élément reste à température acceptable.";
+        else if (densite <= 1.5) verdictTp = "🟠 Densité élevée : acceptable seulement si la circulation d'huile devant l'élément est assurée. Surveillez l'apparition de vernis.";
+        else verdictTp = "⚠️ Densité trop forte : l'huile va craquer au contact de l'élément (vernis, colmatage des filtres). Rallongez les épingles, augmentez leur nombre ou leur diamètre — n'augmentez pas la puissance.";
+        afficher("tp-verdict", verdictTp);
+      } else {
+        afficher("tp-res-densite", "—");
+        afficher("tp-note", `Surface d'échange du réservoir ${fmtFr(surfaceTp, 1)} m².`);
+        afficher("tp-verdict", "");
+      }
+      afficher(
+        "tp-type-note",
+        tpBarillet
+          ? "ℹ️ Thermoplongeur à barillet : le fourreau ajoute une résistance thermique entre la résistance et l'huile, donc l'élément travaille plus chaud à puissance égale. La densité admissible est plus basse qu'en immersion directe — les seuils ci-dessus ne s'y appliquent pas tels quels, demandez la valeur au fabricant."
+          : ""
+      );
+    } else {
+      afficher("tp-res-chauffe", "—");
+      afficher("tp-res-maintien", "—");
+      afficher("tp-res-total", "—");
+      afficher("tp-res-densite", "—");
+      afficher("tp-note", "");
+      afficher("tp-verdict", Number.isFinite(tpTcible) && Number.isFinite(tpTdep) && tpTcible <= tpTdep
+        ? "⚠️ La température visée doit être supérieure à la température de départ."
+        : "");
+      afficher("tp-type-note", "");
+    }
   };
 
   // Sélecteur d'huile, partagé par le calculateur de viscosité (préfixe « vi »)
@@ -1805,6 +2599,40 @@ const huileParDefaut = "Huile minérale standard 46 cSt";
     document.getElementById("bt-champs-direct")?.toggleAttribute("hidden", !direct);
   };
 
+  // Accumulateur : la grandeur choisie comme inconnue devient un résultat, donc
+  // on masque son champ de saisie et on affiche celui du volume utile.
+  const majInconnueAccu = () => {
+    const inconnue = (document.getElementById("ac-inconnue") as HTMLSelectElement | null)?.value ?? "dv";
+    ["dv", "v0", "p0", "pmin", "pmax"].forEach((grandeur) => {
+      const champ = document.getElementById(`ac-champ-${grandeur}`);
+      // Le champ ΔV n'apparaît que lorsqu'il est une donnée d'entrée.
+      const masque = grandeur === "dv" ? inconnue === "dv" : inconnue === grandeur;
+      champ?.toggleAttribute("hidden", masque);
+    });
+  };
+
+  /** Conversions d'unités : chaque champ connaît sa cible et son facteur. */
+  const convertirDepuis = (champ: HTMLInputElement) => {
+    const cible = document.getElementById(champ.dataset.vers ?? "") as HTMLInputElement | null;
+    if (!cible) return;
+    const valeur = parseFloat(champ.value);
+    if (!Number.isFinite(valeur)) { cible.value = ""; return; }
+    const facteur = parseFloat(champ.dataset.facteur ?? "1");
+    const decalage = parseFloat(champ.dataset.offset ?? "0");
+    const resultat = valeur * facteur + decalage;
+    // Arrondi à 6 chiffres significatifs : au-delà, c'est du bruit de calcul.
+    cible.value = String(Number(resultat.toPrecision(6)));
+    if (champ.id === "cv-cst" || champ.id === "cv-sus") {
+      const cSt = champ.id === "cv-cst" ? valeur : resultat;
+      afficher(
+        "cv-note",
+        cSt < 70
+          ? "⚠️ Sous 70 cSt, la relation cSt ↔ SUS n'est plus linéaire : ce facteur devient approximatif. Utilisez la table ASTM D2161 pour les basses viscosités."
+          : ""
+      );
+    }
+  };
+
   type Champ = HTMLInputElement | HTMLSelectElement;
   const tousLesChamps = () =>
     Array.from(
@@ -1850,8 +2678,13 @@ const huileParDefaut = "Huile minérale standard 46 cSt";
       appliques.push(champ);
     });
     if (propagation) appliques.forEach((champ) => propager(champ));
+    // Les conversions sont des valeurs derivees : toujours les recalculer.
+    appliques.forEach((champ) => {
+      if (champ.classList.contains("calc-conv")) convertirDepuis(champ as HTMLInputElement);
+    });
     ["vi", "gi"].forEach((p) => majHuile(p));
     majModeBilan();
+    majInconnueAccu();
     calculer();
   };
 
@@ -1946,6 +2779,7 @@ const huileParDefaut = "Huile minérale standard 46 cSt";
     .forEach((champ) => {
       const reagir = () => {
         propager(champ);
+        if (champ.classList.contains("calc-conv")) convertirDepuis(champ as HTMLInputElement);
         calculer();
         enregistrer();
       };
@@ -1954,6 +2788,7 @@ const huileParDefaut = "Huile minérale standard 46 cSt";
     });
 
   document.getElementById("bt-mode")?.addEventListener("change", majModeBilan);
+  document.getElementById("ac-inconnue")?.addEventListener("change", () => { majInconnueAccu(); calculer(); });
 
   // ------------------------------------------------------------------
   // Exemples pré-remplis : partir d'un cas réel plutôt que d'un formulaire vide
@@ -2005,6 +2840,11 @@ const huileParDefaut = "Huile minérale standard 46 cSt";
   majHuile("vi");
   majHuile("gi");
   majModeBilan();
+  majInconnueAccu();
+  // Amorce les conversions a partir des valeurs par defaut du cote gauche.
+  document.querySelectorAll<HTMLInputElement>(".calc-conv").forEach((champ) => {
+    if (champ.value) convertirDepuis(champ);
+  });
   calculer();
   restaurer();
 

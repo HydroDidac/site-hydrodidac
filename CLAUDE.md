@@ -42,14 +42,15 @@ et éviter de lui demander de toucher au code.
 ## État d'avancement (au 25 juillet 2026)
 - ✅ Site en ligne : accueil, sommaire des 15 modules, liste et pages de fiches,
   à-propos, mentions légales, 404, recherche Pagefind, CMS Decap + Worker OAuth
-- ✅ **Calculateurs** (`/calculateurs`) : 17 calculateurs, sommaire latéral en
-  7 groupes — puissance, débit de pompe, couple, vitesse de moteur hydraulique,
-  force / vitesse / temps de course de vérin, vitesse en conduite, Reynolds,
-  diamètre de conduite, pertes de charge, diamètre de gicleur, débit d'orifice,
-  viscosité selon température, bilan thermique et échangeur, échauffement,
-  volume utile d'accumulateur.
-  Chaque carte affiche la formule et un bloc dépliable « Pour aller plus loin »
-  à deux niveaux (🟢 débutant / 🔴 expert).
+- ✅ **Calculateurs** (`/calculateurs`) : **26 calculateurs**, sommaire latéral
+  en 9 groupes — pompe & puissance, moteur (entraînement, électrique, moteur
+  hydraulique, choix), vérin (force, vitesse, temps, flambage, rigidité),
+  conduites (vitesse, Reynolds, diamètre, pertes, accessoires), gicleurs,
+  viscosité, réservoir & thermique (réservoir, bilan, échauffement,
+  thermoplongeur), accumulateur, conversions d'unités.
+  Chaque carte affiche la formule, un bloc dépliable « Pour aller plus loin »
+  à deux niveaux (🟢 débutant / 🔴 expert), un exemple pré-rempli, les fiches à
+  lire et les calculateurs voisins.
   Le sommaire **filtre** l'affichage : cliquer une entrée n'affiche que ce
   calculateur (état porté par l'ancre `#calc-xxx`, donc partageable) ;
   l'entrée « Tous les calculateurs » revient à la grille complète.
@@ -171,13 +172,10 @@ GitHub gratuit (ce qui limite le spam mais reste une friction assumée).
   catalogue d'huiles sur un nouveau calculateur, dupliquer le bloc de filtres
   avec un nouveau préfixe, poser `class="calc-filtre"` / `class="calc-huile-select"`
   et `data-prefixe="<préfixe>"`, plus les champs cachés `<préfixe>-n1` / `-n2`.
-- Calculateurs restant à intégrer, tous spécifiés (formules incluses) dans
-  `../SPECS_CALCULATEURS_MANQUANTS.md` : accumulateur résolvant n'importe quelle
-  inconnue (évolution de l'existant, prioritaire), réservoir, groupe « Moteur »
-  (moteur d'entraînement + caractéristiques du moteur électrique + choix du
-  moteur hydraulique), thermoplongeur, flambage de tige, pertes dans les
-  accessoires, rigidité hydraulique, convertisseur d'unités. Le bilan thermique
-  (n° 2) est fait.
+- ✅ Tous les calculateurs de `../SPECS_CALCULATEURS_MANQUANTS.md` sont faits.
+  Ce fichier reste la référence des formules retenues, et signale trois points
+  en attente d'arbitrage de Damien (unité de la rigidité corrigée, défauts du
+  bilan thermique, seuils du thermoplongeur à barillet non chiffrés).
 - Les fonctions physiques partagées sont en tête du script : `viscositeA()`
   (Walther/ASTM D341), `masseVolumiqueA()` (densité par famille d'huile, corrigée
   en température), `verdictOrifice()` (validité du coefficient de débit selon
